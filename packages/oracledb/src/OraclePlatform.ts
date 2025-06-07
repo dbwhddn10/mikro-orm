@@ -134,7 +134,7 @@ export class OraclePlatform extends AbstractSqlPlatform {
   }
 
   override getRegExpOperator(): string {
-    throw new Error('Not supported');
+    return 'regexp_like'; // FIXME its a function
   }
 
   override getBlobDeclarationSQL(): string {

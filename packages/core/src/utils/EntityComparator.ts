@@ -380,6 +380,11 @@ export class EntityComparator {
           lines.push(`${padding}    ret${this.wrap(prop.name)} = ${this.propName(prop.fieldNames[0])} == null ? ${this.propName(prop.fieldNames[0])} : !!${this.propName(prop.fieldNames[0])};`);
           lines.push(`${padding}    ${this.propName(prop.fieldNames[0], 'mapped')} = true;`);
           lines.push(`${padding}  }`);
+        } else if (prop.runtimeType === 'number') {
+          lines.push(`${padding}  if (typeof ${this.propName(prop.fieldNames[0])} !== 'undefined') {`);
+          lines.push(`${padding}    ret${this.wrap(prop.name)} = typeof ${this.propName(prop.fieldNames[0])} === 'string' ? +${this.propName(prop.fieldNames[0])} : ${this.propName(prop.fieldNames[0])};`);
+          lines.push(`${padding}    ${this.propName(prop.fieldNames[0], 'mapped')} = true;`);
+          lines.push(`${padding}  }`);
         } else if (prop.runtimeType === 'Date' && !this.platform.isNumericProperty(prop)) {
           lines.push(`${padding}  if (typeof ${this.propName(prop.fieldNames[0])} !== 'undefined') {`);
           context.set('parseDate', (value: string | number) => this.platform.parseDate(value as string));

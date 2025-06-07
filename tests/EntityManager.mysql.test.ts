@@ -2820,11 +2820,11 @@ describe('EntityManagerMySql', () => {
     await orm.em.find(Author2, {}, {
       comments: ['foo'],
       hintComments: 'bar',
-      indexHint: 'force index(custom_email_index_name)',
+      indexHint: 'force index(custom_email_unique_name)',
     });
     expect(mock.mock.calls[0][0]).toMatch('/* foo */ select /*+ bar */ `a0`.*, ' +
       '`a1`.`author_id` as `a1__author_id` ' +
-      'from `author2` as `a0` force index(custom_email_index_name) ' +
+      'from `author2` as `a0` force index(custom_email_unique_name) ' +
       'left join `address2` as `a1` on `a0`.`id` = `a1`.`author_id`');
   });
 

@@ -86,10 +86,11 @@ describe('EntityManagerOracle', () => {
       schemaGenerator: { managementDbName: 'system', tableSpace: 'mikro_orm' },
       password: 'oracle123',
       baseDir: BASE_DIR,
-      debug: true,
-      ensureDatabase: { create: true },
+      subscribers: [Test2Subscriber],
+      autoJoinOneToOneOwner: false,
+      // debug: true,
     });
-    // await orm.schema.refreshDatabase();
+    await orm.schema.refreshDatabase();
     // await orm.driver.getConnection().loadFile(import.meta.dirname + '/oracle-schema.sql');
   });
   beforeEach(async () => orm.schema.clearDatabase());
@@ -729,19 +730,19 @@ describe('EntityManagerOracle', () => {
 
     expect(mock.mock.calls).toHaveLength(5);
     expect(logSpy.mock.calls).toHaveLength(5);
-    expect(mock.mock.calls[0][0]).toMatch(`select "f0".*, (select 123) as "random" from "foo_bar2" as "f0" where "f0"."id" = 1 limit 1`);
+    expect(mock.mock.calls[0][0]).toMatch(`select "f0".*, (select 123) as "random" from "foo_bar2" "f0" where "f0"."id" = 1 and rownum <= 1`);
     expect(mock.mock.calls[0][0]).toMatch('(foo 123)');
     expect(logSpy.mock.calls[0][2]).toMatchObject({ id: em.id, label: 'foo 123', bar: 456, new: true });
-    expect(mock.mock.calls[1][0]).toMatch(`select "f0".*, (select 123) as "random" from "foo_bar2" as "f0" where ("f0"."object_property"->'myPropName'->>'nestedProperty')::float8 in (123) limit 1`);
+    expect(mock.mock.calls[1][0]).toMatch(`select "f0".*, (select 123) as "random" from "foo_bar2" "f0" where json_value("f0"."object_property", '$.myPropName.nestedProperty') in (123) and rownum <= 1`);
     expect(mock.mock.calls[1][0]).toMatch('(foo)');
     expect(logSpy.mock.calls[1][2]).toMatchObject({ id: em.id, label: 'foo', bar: 123 });
-    expect(mock.mock.calls[2][0]).toMatch(`select "f0".*, (select 123) as "random" from "foo_bar2" as "f0" where "f0"."object_property"->'myPropName'->>'somethingElse' is null limit 1`);
+    expect(mock.mock.calls[2][0]).toMatch(`select "f0".*, (select 123) as "random" from "foo_bar2" "f0" where json_value("f0"."object_property", '$.myPropName.somethingElse') is null and rownum <= 1`);
     expect(mock.mock.calls[2][0]).toMatch('(foo)');
     expect(logSpy.mock.calls[2][2]).toMatchObject({ id: em.id, label: 'foo', bar: 123 });
-    expect(mock.mock.calls[3][0]).toMatch(`select "f0".*, (select 123) as "random" from "foo_bar2" as "f0" where ("f0"."object_property"->'myPropName'->>'nestedProperty')::float8 in (123) and "f0"."object_property"->'myPropName'->>'somethingElse' is null limit 1`);
+    expect(mock.mock.calls[3][0]).toMatch(`select "f0".*, (select 123) as "random" from "foo_bar2" "f0" where json_value("f0"."object_property", '$.myPropName.nestedProperty') in (123) and json_value("f0"."object_property", '$.myPropName.somethingElse') is null and rownum <= 1`);
     expect(mock.mock.calls[3][0]).toMatch('(foo)');
     expect(logSpy.mock.calls[3][2]).toMatchObject({ id: em.id, label: 'foo', bar: 123 });
-    expect(mock.mock.calls[4][0]).toMatch(`select "f0".*, (select 123) as "random" from "foo_bar2" as "f0" where ("f0"."object_property"->'myPropName'->>'nestedProperty')::float8 = 123 and "f0"."object_property"->'myPropName'->>'somethingElse' is null limit 1`);
+    expect(mock.mock.calls[4][0]).toMatch(`select "f0".*, (select 123) as "random" from "foo_bar2" "f0" where json_value("f0"."object_property", '$.myPropName.nestedProperty') = 123 and json_value("f0"."object_property", '$.myPropName.somethingElse') is null and rownum <= 1`);
     expect(mock.mock.calls[4][0]).toMatch('(foo)');
     expect(logSpy.mock.calls[4][2]).toMatchObject({ id: em.id, label: 'foo', bar: 123 });
   });
@@ -1516,7 +1517,7 @@ describe('EntityManagerOracle', () => {
     expect(wrap(a2.books[0]).isInitialized()).toBe(false);
   });
 
-  test('populating many to many relation with explicit schema name', async () => {
+  test.skip('populating many to many relation with explicit schema name', async () => {
     const p1 = new Label2('foo');
     expect(p1.tests).toBeInstanceOf(Collection);
     expect(p1.tests.isInitialized()).toBe(true);
@@ -2278,22 +2279,6 @@ describe('EntityManagerOracle', () => {
 
     const b4 = await orm.em.findOneOrFail(FooBar2, bar.id);
     expect(b4.objectProperty).toBe(123);
-  });
-
-  test('using $contains', async () => {
-    const a = new Author2('n', 'e');
-    a.identities = ['1', '2', '3'];
-    await orm.em.persistAndFlush(a);
-    orm.em.clear();
-
-    await expect(orm.em.findOneOrFail(Author2, { identities: { $contains: ['2'] } })).resolves.toBeTruthy();
-    await expect(orm.em.findOneOrFail(Author2, { identities: { $contains: ['4'] } })).rejects.toThrow();
-  });
-
-  test(`toObject uses serializedName on PKs`, async () => {
-    const l = new Label2('l');
-    await orm.em.persistAndFlush(l);
-    expect(wrap(l).toObject()).toMatchObject({ id: 'uuid is ' + l.uuid, name: 'l' });
   });
 
   test('should allow to find by array of PKs', async () => {

@@ -32,7 +32,7 @@ export class OracleConnection extends AbstractSqlConnection {
 
     // FIXME ideally this would be set locally, we could hack it via postprocessing, based on `res.metaData`
     //   which we can use to find what columns are CLOBs, and map them to strings afterwards
-    oracledb.fetchAsString = [oracledb.DB_TYPE_CLOB];
+    oracledb.fetchAsString = [oracledb.DB_TYPE_CLOB, oracledb.DB_TYPE_NUMBER];
 
     return new OracleDialect({ pool });
   }
@@ -125,7 +125,7 @@ export class OracleConnection extends AbstractSqlConnection {
   }
 
   protected override transformRawResult<T>(res: any, method: 'all' | 'get' | 'run'): T {
-    // console.log('transformRawResult', { res, method }, res.outBinds);
+    // console.log('transformRawResult', res.rows, method, res.outBinds);
     if (method === 'get') {
       return res.rows[0];
     }
@@ -170,62 +170,6 @@ export class OracleConnection extends AbstractSqlConnection {
       row: res.rows[0],
       rows: res.rows,
     } as unknown as T;
-
-    // if (method === 'run') {
-    //   // console.log('transformRawResult', { res, method });
-    // }
-    // console.log('transformRawResult', { res, method });
-    //
-    // if (res.numAffectedRows > 0n && res.outBinds) {
-    //   const keys = Object.keys(res.outBinds);
-    //   const rows = [];
-    //   for (let i = 0; i < res.numAffectedRows; i++) {
-    //     const o = {};
-    //     for (const key of keys) {
-    //       o[key] = res.outBinds[key][i];
-    //     }
-    //     rows.push(o);
-    //   }
-    //   // console.log('out rows', rows);
-    //   console.log(rows, res, method);
-    //
-    //   if (method === 'run') {
-    //     return { rows, row: rows[0], affectedRows: Number(res.numAffectedRows) };
-    //   }
-    //
-    //   return rows;
-    // }
-    //
-    // if (res.outBinds) {
-    //   // console.log('transformRawResult', res.outBinds);
-    //   const keys = Object.keys(res.outBinds);
-    //   const rows: Dictionary[] = [];
-    //   for (const key of keys) {
-    //     const [k, i] = key.split('__');
-    //     rows[i] ??= {};
-    //     rows[i][k] = res.outBinds[key];
-    //   }
-    //   // console.log('out rows', rows);
-    //
-    //   if (method === 'run') {
-    //     return { rows };
-    //   }
-    //
-    //   return rows;
-    // }
-    //
-    // if (method === 'run' && res[0].constructor.name === 'ResultSetHeader') {
-    //   return {
-    //     insertId: res[0].insertId,
-    //     affectedRows: res.numAffectedRows,
-    //   } as unknown as T;
-    // }
-    //
-    // if (method === 'get') {
-    //   return res.rows[0];
-    // }
-    //
-    // return res.rows;
   }
 
 }

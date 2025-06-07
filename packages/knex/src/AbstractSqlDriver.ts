@@ -703,7 +703,7 @@ export abstract class AbstractSqlDriver<Connection extends AbstractSqlConnection
     return res;
   }
 
-  override async nativeUpdateMany<T extends object>(entityName: string, where: FilterQuery<T>[], data: EntityDictionary<T>[], options: NativeInsertUpdateManyOptions<T> & UpsertManyOptions<T> = {}): Promise<QueryResult<T>> {
+  override async nativeUpdateMany<T extends object>(entityName: string, where: FilterQuery<T>[], data: EntityDictionary<T>[], options: NativeInsertUpdateManyOptions<T> & UpsertManyOptions<T> = {}, transform?: (sql: string, params: any[]) => string): Promise<QueryResult<T>> {
     options.processCollections ??= true;
     options.convertCustomTypes ??= true;
     const meta = this.metadata.get<T>(entityName);
@@ -843,6 +843,10 @@ export abstract class AbstractSqlDriver<Connection extends AbstractSqlConnection
       const returningFields = Utils.flatten([...returning].map(prop => meta.properties[prop].fieldNames));
       /* v8 ignore next */
       sql += returningFields.length > 0 ? ` returning ${returningFields.map(field => this.platform.quoteIdentifier(field)).join(', ')}` : '';
+    }
+
+    if (transform) {
+      sql = transform(sql, params);
     }
 
     const res = await this.rethrow(this.execute<QueryResult<T>>(sql, params, 'run', options.ctx));

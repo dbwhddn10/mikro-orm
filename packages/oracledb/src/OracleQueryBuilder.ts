@@ -17,7 +17,14 @@ export class OracleQueryBuilder<
 
     // always respect explicit returning hint
     if (returning && returning.length > 0) {
-      qb.returning(returning.map(field => this.helper.mapper(field as string, this.type)));
+      qb.returning(returning.map(field => {
+        if (typeof field === 'string') {
+          const prop = this.helper.getProperty(field);
+          return [field, prop?.runtimeType ?? 'string'];
+        }
+
+        return this.helper.mapper(field as unknown as string, this.type);
+      }));
 
       return;
     }
@@ -38,13 +45,14 @@ export class OracleQueryBuilder<
       const returningProps = meta.hydrateProps.filter(prop => prop.fieldNames && isRaw(arr[0][prop.fieldNames[0]]));
 
       if (returningProps.length > 0) {
-        qb.returning(returningProps.flatMap(prop => {
+        qb.returning(returningProps.map(prop => {
           if (prop.hasConvertToJSValueSQL) {
             const aliased = this.platform.quoteIdentifier(prop.fieldNames[0]);
             const sql = prop.customType!.convertToJSValueSQL!(aliased, this.platform) + ' as ' + this.platform.quoteIdentifier(prop.fieldNames[0]);
-            return [raw(sql)];
+            return raw(sql);
           }
-          return prop.fieldNames;
+
+          return [prop.fieldNames[0], prop.runtimeType];
         }) as any);
       }
     }

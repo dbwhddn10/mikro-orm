@@ -341,8 +341,6 @@ class Migration20191013214813 extends Migration {
   async up() {
     this.addSql(\`alter table \\\`test2\\\` drop foreign key \\\`test2_foo___bar_foreign\\\`;\`);
 
-    this.addSql(\`alter table \\\`author2\\\` drop index \\\`custom_email_index_name\\\`;\`);
-
     this.addSql(\`alter table \\\`book2\\\` drop column \\\`foo\\\`;\`);
 
     this.addSql(\`alter table \\\`test2\\\` drop index \\\`test2_foo___bar_unique\\\`;\`);
@@ -350,8 +348,6 @@ class Migration20191013214813 extends Migration {
   }
 
   async down() {
-    this.addSql(\`alter table \\\`author2\\\` add index \\\`custom_email_index_name\\\` (\\\`email\\\`);\`);
-
     this.addSql(\`alter table \\\`book2\\\` add \\\`foo\\\` varchar(255) null default 'lol';\`);
 
     this.addSql(\`alter table \\\`test2\\\` add \\\`foo___bar\\\` int unsigned null, add \\\`foo___baz\\\` int unsigned null;\`);
@@ -364,8 +360,6 @@ exports.Migration20191013214813 = Migration20191013214813;
 ",
   "diff": {
     "down": [
-      "alter table \`author2\` add index \`custom_email_index_name\` (\`email\`);",
-      "",
       "alter table \`book2\` add \`foo\` varchar(255) null default 'lol';",
       "",
       "alter table \`test2\` add \`foo___bar\` int unsigned null, add \`foo___baz\` int unsigned null;",
@@ -374,8 +368,6 @@ exports.Migration20191013214813 = Migration20191013214813;
     ],
     "up": [
       "alter table \`test2\` drop foreign key \`test2_foo___bar_foreign\`;",
-      "",
-      "alter table \`author2\` drop index \`custom_email_index_name\`;",
       "",
       "alter table \`book2\` drop column \`foo\`;",
       "",
@@ -398,8 +390,6 @@ class Migration20191013214813 extends Migration {
   async up() {
     this.addSql(\`alter table \\\`test2\\\` drop foreign key \\\`test2_foo___bar_foreign\\\`;\`);
 
-    this.addSql(\`alter table \\\`author2\\\` drop index \\\`custom_email_index_name\\\`;\`);
-
     this.addSql(\`alter table \\\`book2\\\` drop column \\\`foo\\\`;\`);
 
     this.addSql(\`alter table \\\`test2\\\` drop index \\\`test2_foo___bar_unique\\\`;\`);
@@ -407,8 +397,6 @@ class Migration20191013214813 extends Migration {
   }
 
   async down() {
-    this.addSql(\`alter table \\\`author2\\\` add index \\\`custom_email_index_name\\\` (\\\`email\\\`);\`);
-
     this.addSql(\`alter table \\\`book2\\\` add \\\`foo\\\` varchar(255) null default 'lol';\`);
 
     this.addSql(\`alter table \\\`test2\\\` add \\\`foo___bar\\\` int unsigned null, add \\\`foo___baz\\\` int unsigned null;\`);
@@ -421,8 +409,6 @@ exports.Migration20191013214813 = Migration20191013214813;
 ",
   "diff": {
     "down": [
-      "alter table \`author2\` add index \`custom_email_index_name\` (\`email\`);",
-      "",
       "alter table \`book2\` add \`foo\` varchar(255) null default 'lol';",
       "",
       "alter table \`test2\` add \`foo___bar\` int unsigned null, add \`foo___baz\` int unsigned null;",
@@ -431,8 +417,6 @@ exports.Migration20191013214813 = Migration20191013214813;
     ],
     "up": [
       "alter table \`test2\` drop foreign key \`test2_foo___bar_foreign\`;",
-      "",
-      "alter table \`author2\` drop index \`custom_email_index_name\`;",
       "",
       "alter table \`book2\` drop column \`foo\`;",
       "",
@@ -453,8 +437,6 @@ export class Migration20191013214813 extends Migration {
   override async up(): Promise<void> {
     this.addSql(\`alter table \\\`test2\\\` drop foreign key \\\`test2_foo___bar_foreign\\\`;\`);
 
-    this.addSql(\`alter table \\\`author2\\\` drop index \\\`custom_email_index_name\\\`;\`);
-
     this.addSql(\`alter table \\\`book2\\\` drop column \\\`foo\\\`;\`);
 
     this.addSql(\`alter table \\\`test2\\\` drop index \\\`test2_foo___bar_unique\\\`;\`);
@@ -462,8 +444,6 @@ export class Migration20191013214813 extends Migration {
   }
 
   override async down(): Promise<void> {
-    this.addSql(\`alter table \\\`author2\\\` add index \\\`custom_email_index_name\\\` (\\\`email\\\`);\`);
-
     this.addSql(\`alter table \\\`book2\\\` add \\\`foo\\\` varchar(255) null default 'lol';\`);
 
     this.addSql(\`alter table \\\`test2\\\` add \\\`foo___bar\\\` int unsigned null, add \\\`foo___baz\\\` int unsigned null;\`);
@@ -475,8 +455,6 @@ export class Migration20191013214813 extends Migration {
 ",
   "diff": {
     "down": [
-      "alter table \`author2\` add index \`custom_email_index_name\` (\`email\`);",
-      "",
       "alter table \`book2\` add \`foo\` varchar(255) null default 'lol';",
       "",
       "alter table \`test2\` add \`foo___bar\` int unsigned null, add \`foo___baz\` int unsigned null;",
@@ -485,8 +463,6 @@ export class Migration20191013214813 extends Migration {
     ],
     "up": [
       "alter table \`test2\` drop foreign key \`test2_foo___bar_foreign\`;",
-      "",
-      "alter table \`author2\` drop index \`custom_email_index_name\`;",
       "",
       "alter table \`book2\` drop column \`foo\`;",
       "",
@@ -507,8 +483,6 @@ export class Migration20191013214813 extends Migration {
   override async up(): Promise<void> {
     this.addSql(\`alter table \\\`test2\\\` drop foreign key \\\`test2_foo___bar_foreign\\\`;\`);
 
-    this.addSql(\`alter table \\\`author2\\\` drop index \\\`custom_email_index_name\\\`;\`);
-
     this.addSql(\`alter table \\\`book2\\\` drop column \\\`foo\\\`;\`);
 
     this.addSql(\`alter table \\\`test2\\\` drop index \\\`test2_foo___bar_unique\\\`;\`);
@@ -516,8 +490,6 @@ export class Migration20191013214813 extends Migration {
   }
 
   override async down(): Promise<void> {
-    this.addSql(\`alter table \\\`author2\\\` add index \\\`custom_email_index_name\\\` (\\\`email\\\`);\`);
-
     this.addSql(\`alter table \\\`book2\\\` add \\\`foo\\\` varchar(255) null default 'lol';\`);
 
     this.addSql(\`alter table \\\`test2\\\` add \\\`foo___bar\\\` int unsigned null, add \\\`foo___baz\\\` int unsigned null;\`);
@@ -529,8 +501,6 @@ export class Migration20191013214813 extends Migration {
 ",
   "diff": {
     "down": [
-      "alter table \`author2\` add index \`custom_email_index_name\` (\`email\`);",
-      "",
       "alter table \`book2\` add \`foo\` varchar(255) null default 'lol';",
       "",
       "alter table \`test2\` add \`foo___bar\` int unsigned null, add \`foo___baz\` int unsigned null;",
@@ -539,8 +509,6 @@ export class Migration20191013214813 extends Migration {
     ],
     "up": [
       "alter table \`test2\` drop foreign key \`test2_foo___bar_foreign\`;",
-      "",
-      "alter table \`author2\` drop index \`custom_email_index_name\`;",
       "",
       "alter table \`book2\` drop column \`foo\`;",
       "",
@@ -863,8 +831,6 @@ export class Migration20191013214813_with-custom-name extends Migration {
   override async up(): Promise<void> {
     this.addSql(\`alter table \\\`test2\\\` drop foreign key \\\`test2_foo___bar_foreign\\\`;\`);
 
-    this.addSql(\`alter table \\\`author2\\\` drop index \\\`custom_email_index_name\\\`;\`);
-
     this.addSql(\`alter table \\\`book2\\\` drop column \\\`foo\\\`;\`);
 
     this.addSql(\`alter table \\\`test2\\\` drop index \\\`test2_foo___bar_unique\\\`;\`);
@@ -872,8 +838,6 @@ export class Migration20191013214813_with-custom-name extends Migration {
   }
 
   override async down(): Promise<void> {
-    this.addSql(\`alter table \\\`author2\\\` add index \\\`custom_email_index_name\\\` (\\\`email\\\`);\`);
-
     this.addSql(\`alter table \\\`book2\\\` add \\\`foo\\\` varchar(255) null default 'lol';\`);
 
     this.addSql(\`alter table \\\`test2\\\` add \\\`foo___bar\\\` int unsigned null, add \\\`foo___baz\\\` int unsigned null;\`);
@@ -885,8 +849,6 @@ export class Migration20191013214813_with-custom-name extends Migration {
 ",
   "diff": {
     "down": [
-      "alter table \`author2\` add index \`custom_email_index_name\` (\`email\`);",
-      "",
       "alter table \`book2\` add \`foo\` varchar(255) null default 'lol';",
       "",
       "alter table \`test2\` add \`foo___bar\` int unsigned null, add \`foo___baz\` int unsigned null;",
@@ -895,8 +857,6 @@ export class Migration20191013214813_with-custom-name extends Migration {
     ],
     "up": [
       "alter table \`test2\` drop foreign key \`test2_foo___bar_foreign\`;",
-      "",
-      "alter table \`author2\` drop index \`custom_email_index_name\`;",
       "",
       "alter table \`book2\` drop column \`foo\`;",
       "",

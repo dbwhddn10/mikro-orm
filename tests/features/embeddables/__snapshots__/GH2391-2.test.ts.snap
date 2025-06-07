@@ -5,7 +5,7 @@ exports[`onCreate and onUpdate in embeddables (GH 2283 and 2391) > result mapper
   const ret = {};
   const mapped = {};
   if (typeof result.id !== 'undefined') {
-    ret.id = result.id;
+    ret.id = typeof result.id === 'string' ? +result.id : result.id;
     mapped.id = true;
   }
   if (typeof result.foo_audit1_archivedAt !== 'undefined') {

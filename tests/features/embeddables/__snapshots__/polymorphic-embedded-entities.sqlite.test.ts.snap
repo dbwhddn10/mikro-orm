@@ -5,7 +5,7 @@ exports[`polymorphic embeddables in sqlite > diffing 1`] = `
   if (data.id === null) {
     entity.id = null;
   } else if (typeof data.id !== 'undefined') {
-    entity.id = data.id;
+    entity.id = typeof data === 'string' ? +data.id : data.id;
   }
   if (data.name === null) {
     entity.name = null;
@@ -54,12 +54,12 @@ exports[`polymorphic embeddables in sqlite > diffing 1`] = `
         if (data.pet_food_cats === null) {
           entity.pet.food.cats = null;
         } else if (typeof data.pet_food_cats !== 'undefined') {
-          entity.pet.food.cats = data.pet_food_cats;
+          entity.pet.food.cats = typeof data === 'string' ? +data.pet_food_cats : data.pet_food_cats;
         }
         if (data.pet_food_mice === null) {
           entity.pet.food.mice = null;
         } else if (typeof data.pet_food_mice !== 'undefined') {
-          entity.pet.food.mice = data.pet_food_mice;
+          entity.pet.food.mice = typeof data === 'string' ? +data.pet_food_mice : data.pet_food_mice;
         }
       } else if (data.pet_food_cats === null && data.pet_food_mice === null) {
         entity.pet.food = null;
@@ -75,12 +75,12 @@ exports[`polymorphic embeddables in sqlite > diffing 1`] = `
         if (data.pet_food.cats === null) {
           entity.pet.food.cats = null;
         } else if (typeof data.pet_food.cats !== 'undefined') {
-          entity.pet.food.cats = data.pet_food.cats;
+          entity.pet.food.cats = typeof data === 'string' ? +data.pet_food.cats : data.pet_food.cats;
         }
         if (data.pet_food.mice === null) {
           entity.pet.food.mice = null;
         } else if (typeof data.pet_food.mice !== 'undefined') {
-          entity.pet.food.mice = data.pet_food.mice;
+          entity.pet.food.mice = typeof data === 'string' ? +data.pet_food.mice : data.pet_food.mice;
         }
       } else if (data.pet_food === null) {
         entity.pet.food = null;
@@ -120,12 +120,12 @@ exports[`polymorphic embeddables in sqlite > diffing 1`] = `
         if (data.pet_food_cats === null) {
           entity.pet.food.cats = null;
         } else if (typeof data.pet_food_cats !== 'undefined') {
-          entity.pet.food.cats = data.pet_food_cats;
+          entity.pet.food.cats = typeof data === 'string' ? +data.pet_food_cats : data.pet_food_cats;
         }
         if (data.pet_food_mice === null) {
           entity.pet.food.mice = null;
         } else if (typeof data.pet_food_mice !== 'undefined') {
-          entity.pet.food.mice = data.pet_food_mice;
+          entity.pet.food.mice = typeof data === 'string' ? +data.pet_food_mice : data.pet_food_mice;
         }
       } else if (data.pet_food_cats === null && data.pet_food_mice === null) {
         entity.pet.food = null;
@@ -141,12 +141,12 @@ exports[`polymorphic embeddables in sqlite > diffing 1`] = `
         if (data.pet_food.cats === null) {
           entity.pet.food.cats = null;
         } else if (typeof data.pet_food.cats !== 'undefined') {
-          entity.pet.food.cats = data.pet_food.cats;
+          entity.pet.food.cats = typeof data === 'string' ? +data.pet_food.cats : data.pet_food.cats;
         }
         if (data.pet_food.mice === null) {
           entity.pet.food.mice = null;
         } else if (typeof data.pet_food.mice !== 'undefined') {
-          entity.pet.food.mice = data.pet_food.mice;
+          entity.pet.food.mice = typeof data === 'string' ? +data.pet_food.mice : data.pet_food.mice;
         }
       } else if (data.pet_food === null) {
         entity.pet.food = null;
@@ -194,12 +194,12 @@ exports[`polymorphic embeddables in sqlite > diffing 1`] = `
         if (data.pet_food_cats === null) {
           entity.pet.food.cats = null;
         } else if (typeof data.pet_food_cats !== 'undefined') {
-          entity.pet.food.cats = data.pet_food_cats;
+          entity.pet.food.cats = typeof data === 'string' ? +data.pet_food_cats : data.pet_food_cats;
         }
         if (data.pet_food_mice === null) {
           entity.pet.food.mice = null;
         } else if (typeof data.pet_food_mice !== 'undefined') {
-          entity.pet.food.mice = data.pet_food_mice;
+          entity.pet.food.mice = typeof data === 'string' ? +data.pet_food_mice : data.pet_food_mice;
         }
       } else if (data.pet_food_cats === null && data.pet_food_mice === null) {
         entity.pet.food = null;
@@ -215,12 +215,12 @@ exports[`polymorphic embeddables in sqlite > diffing 1`] = `
         if (data.pet.food.cats === null) {
           entity.pet.food.cats = null;
         } else if (typeof data.pet.food.cats !== 'undefined') {
-          entity.pet.food.cats = data.pet.food.cats;
+          entity.pet.food.cats = typeof data === 'string' ? +data.pet.food.cats : data.pet.food.cats;
         }
         if (data.pet.food.mice === null) {
           entity.pet.food.mice = null;
         } else if (typeof data.pet.food.mice !== 'undefined') {
-          entity.pet.food.mice = data.pet.food.mice;
+          entity.pet.food.mice = typeof data === 'string' ? +data.pet.food.mice : data.pet.food.mice;
         }
       } else if (data.pet.food === null) {
         entity.pet.food = null;
@@ -260,12 +260,12 @@ exports[`polymorphic embeddables in sqlite > diffing 1`] = `
         if (data.pet_food_cats === null) {
           entity.pet.food.cats = null;
         } else if (typeof data.pet_food_cats !== 'undefined') {
-          entity.pet.food.cats = data.pet_food_cats;
+          entity.pet.food.cats = typeof data === 'string' ? +data.pet_food_cats : data.pet_food_cats;
         }
         if (data.pet_food_mice === null) {
           entity.pet.food.mice = null;
         } else if (typeof data.pet_food_mice !== 'undefined') {
-          entity.pet.food.mice = data.pet_food_mice;
+          entity.pet.food.mice = typeof data === 'string' ? +data.pet_food_mice : data.pet_food_mice;
         }
       } else if (data.pet_food_cats === null && data.pet_food_mice === null) {
         entity.pet.food = null;
@@ -281,12 +281,12 @@ exports[`polymorphic embeddables in sqlite > diffing 1`] = `
         if (data.pet.food.cats === null) {
           entity.pet.food.cats = null;
         } else if (typeof data.pet.food.cats !== 'undefined') {
-          entity.pet.food.cats = data.pet.food.cats;
+          entity.pet.food.cats = typeof data === 'string' ? +data.pet.food.cats : data.pet.food.cats;
         }
         if (data.pet.food.mice === null) {
           entity.pet.food.mice = null;
         } else if (typeof data.pet.food.mice !== 'undefined') {
-          entity.pet.food.mice = data.pet.food.mice;
+          entity.pet.food.mice = typeof data === 'string' ? +data.pet.food.mice : data.pet.food.mice;
         }
       } else if (data.pet.food === null) {
         entity.pet.food = null;
@@ -334,12 +334,12 @@ exports[`polymorphic embeddables in sqlite > diffing 1`] = `
         if (data['pet2~foodcats'] === null) {
           entity.pet2.food.cats = null;
         } else if (typeof data['pet2~foodcats'] !== 'undefined') {
-          entity.pet2.food.cats = data['pet2~foodcats'];
+          entity.pet2.food.cats = typeof data === 'string' ? +data['pet2~foodcats'] : data['pet2~foodcats'];
         }
         if (data['pet2~foodmice'] === null) {
           entity.pet2.food.mice = null;
         } else if (typeof data['pet2~foodmice'] !== 'undefined') {
-          entity.pet2.food.mice = data['pet2~foodmice'];
+          entity.pet2.food.mice = typeof data === 'string' ? +data['pet2~foodmice'] : data['pet2~foodmice'];
         }
       } else if (data['pet2~foodcats'] === null && data['pet2~foodmice'] === null) {
         entity.pet2.food = null;
@@ -355,12 +355,12 @@ exports[`polymorphic embeddables in sqlite > diffing 1`] = `
         if (data.pet2.food.cats === null) {
           entity.pet2.food.cats = null;
         } else if (typeof data.pet2.food.cats !== 'undefined') {
-          entity.pet2.food.cats = data.pet2.food.cats;
+          entity.pet2.food.cats = typeof data === 'string' ? +data.pet2.food.cats : data.pet2.food.cats;
         }
         if (data.pet2.food.mice === null) {
           entity.pet2.food.mice = null;
         } else if (typeof data.pet2.food.mice !== 'undefined') {
-          entity.pet2.food.mice = data.pet2.food.mice;
+          entity.pet2.food.mice = typeof data === 'string' ? +data.pet2.food.mice : data.pet2.food.mice;
         }
       } else if (data.pet2.food === null) {
         entity.pet2.food = null;
@@ -400,12 +400,12 @@ exports[`polymorphic embeddables in sqlite > diffing 1`] = `
         if (data['pet2~foodcats'] === null) {
           entity.pet2.food.cats = null;
         } else if (typeof data['pet2~foodcats'] !== 'undefined') {
-          entity.pet2.food.cats = data['pet2~foodcats'];
+          entity.pet2.food.cats = typeof data === 'string' ? +data['pet2~foodcats'] : data['pet2~foodcats'];
         }
         if (data['pet2~foodmice'] === null) {
           entity.pet2.food.mice = null;
         } else if (typeof data['pet2~foodmice'] !== 'undefined') {
-          entity.pet2.food.mice = data['pet2~foodmice'];
+          entity.pet2.food.mice = typeof data === 'string' ? +data['pet2~foodmice'] : data['pet2~foodmice'];
         }
       } else if (data['pet2~foodcats'] === null && data['pet2~foodmice'] === null) {
         entity.pet2.food = null;
@@ -421,12 +421,12 @@ exports[`polymorphic embeddables in sqlite > diffing 1`] = `
         if (data.pet2.food.cats === null) {
           entity.pet2.food.cats = null;
         } else if (typeof data.pet2.food.cats !== 'undefined') {
-          entity.pet2.food.cats = data.pet2.food.cats;
+          entity.pet2.food.cats = typeof data === 'string' ? +data.pet2.food.cats : data.pet2.food.cats;
         }
         if (data.pet2.food.mice === null) {
           entity.pet2.food.mice = null;
         } else if (typeof data.pet2.food.mice !== 'undefined') {
-          entity.pet2.food.mice = data.pet2.food.mice;
+          entity.pet2.food.mice = typeof data === 'string' ? +data.pet2.food.mice : data.pet2.food.mice;
         }
       } else if (data.pet2.food === null) {
         entity.pet2.food = null;
@@ -480,12 +480,12 @@ exports[`polymorphic embeddables in sqlite > diffing 1`] = `
             if (data['pets~foodcats'] === null) {
               entity.pets[idx_50].food.cats = null;
             } else if (typeof data['pets~foodcats'] !== 'undefined') {
-              entity.pets[idx_50].food.cats = data['pets~foodcats'];
+              entity.pets[idx_50].food.cats = typeof data === 'string' ? +data['pets~foodcats'] : data['pets~foodcats'];
             }
             if (data['pets~foodmice'] === null) {
               entity.pets[idx_50].food.mice = null;
             } else if (typeof data['pets~foodmice'] !== 'undefined') {
-              entity.pets[idx_50].food.mice = data['pets~foodmice'];
+              entity.pets[idx_50].food.mice = typeof data === 'string' ? +data['pets~foodmice'] : data['pets~foodmice'];
             }
           } else if (data['pets~foodcats'] === null && data['pets~foodmice'] === null) {
             entity.pets[idx_50].food = null;
@@ -501,12 +501,12 @@ exports[`polymorphic embeddables in sqlite > diffing 1`] = `
             if (data.pets[idx_50].food.cats === null) {
               entity.pets[idx_50].food.cats = null;
             } else if (typeof data.pets[idx_50].food.cats !== 'undefined') {
-              entity.pets[idx_50].food.cats = data.pets[idx_50].food.cats;
+              entity.pets[idx_50].food.cats = typeof data === 'string' ? +data.pets[idx_50].food.cats : data.pets[idx_50].food.cats;
             }
             if (data.pets[idx_50].food.mice === null) {
               entity.pets[idx_50].food.mice = null;
             } else if (typeof data.pets[idx_50].food.mice !== 'undefined') {
-              entity.pets[idx_50].food.mice = data.pets[idx_50].food.mice;
+              entity.pets[idx_50].food.mice = typeof data === 'string' ? +data.pets[idx_50].food.mice : data.pets[idx_50].food.mice;
             }
           } else if (data.pets[idx_50].food === null) {
             entity.pets[idx_50].food = null;
@@ -546,12 +546,12 @@ exports[`polymorphic embeddables in sqlite > diffing 1`] = `
             if (data['pets~foodcats'] === null) {
               entity.pets[idx_50].food.cats = null;
             } else if (typeof data['pets~foodcats'] !== 'undefined') {
-              entity.pets[idx_50].food.cats = data['pets~foodcats'];
+              entity.pets[idx_50].food.cats = typeof data === 'string' ? +data['pets~foodcats'] : data['pets~foodcats'];
             }
             if (data['pets~foodmice'] === null) {
               entity.pets[idx_50].food.mice = null;
             } else if (typeof data['pets~foodmice'] !== 'undefined') {
-              entity.pets[idx_50].food.mice = data['pets~foodmice'];
+              entity.pets[idx_50].food.mice = typeof data === 'string' ? +data['pets~foodmice'] : data['pets~foodmice'];
             }
           } else if (data['pets~foodcats'] === null && data['pets~foodmice'] === null) {
             entity.pets[idx_50].food = null;
@@ -567,12 +567,12 @@ exports[`polymorphic embeddables in sqlite > diffing 1`] = `
             if (data.pets[idx_50].food.cats === null) {
               entity.pets[idx_50].food.cats = null;
             } else if (typeof data.pets[idx_50].food.cats !== 'undefined') {
-              entity.pets[idx_50].food.cats = data.pets[idx_50].food.cats;
+              entity.pets[idx_50].food.cats = typeof data === 'string' ? +data.pets[idx_50].food.cats : data.pets[idx_50].food.cats;
             }
             if (data.pets[idx_50].food.mice === null) {
               entity.pets[idx_50].food.mice = null;
             } else if (typeof data.pets[idx_50].food.mice !== 'undefined') {
-              entity.pets[idx_50].food.mice = data.pets[idx_50].food.mice;
+              entity.pets[idx_50].food.mice = typeof data === 'string' ? +data.pets[idx_50].food.mice : data.pets[idx_50].food.mice;
             }
           } else if (data.pets[idx_50].food === null) {
             entity.pets[idx_50].food = null;

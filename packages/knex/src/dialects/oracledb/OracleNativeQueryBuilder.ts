@@ -128,8 +128,7 @@ export class OracleNativeQueryBuilder extends NativeQueryBuilder {
 
     block += ' end;';
 
-    // @ts-ignore FIXME `outBindings` probably not needed
-    return { sql: block, params: [outBindings], outBindings };
+    return { sql: block, params: [outBindings] };
   }
 
   protected override compileUpdate() {
@@ -156,7 +155,6 @@ export class OracleNativeQueryBuilder extends NativeQueryBuilder {
       for (const key of Object.keys(this.options.data)) {
         parts.push(`${this.quote(key)} = ?`);
 
-        // FIXME
         if (this.options.data![key] instanceof Date) {
           const value = this.options.data![key].toISOString().replace('T', ' ').substring(0, 23);
           this.params.push(raw(`timestamp '${value}'`));
@@ -234,7 +232,7 @@ export class OracleNativeQueryBuilder extends NativeQueryBuilder {
       };
     }
 
-    return { sql, params: this.params, outBindings };
+    return { sql, params: this.params };
   }
 
   private compileUpsert() {

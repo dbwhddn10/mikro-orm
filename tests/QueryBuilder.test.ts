@@ -3173,23 +3173,23 @@ describe('QueryBuilder', () => {
 
   test('index hints', async () => {
     const sql1 = orm.em.createQueryBuilder(Author2)
-      .indexHint('force index(custom_email_index_name)')
+      .indexHint('force index(author2_born_index)')
       .where({ favouriteBook: { $in: ['1', '2', '3'] } })
       .getFormattedQuery();
-    expect(sql1).toBe("select `e0`.* from `author2` as `e0` force index(custom_email_index_name) where `e0`.`favourite_book_uuid_pk` in ('1', '2', '3')");
+    expect(sql1).toBe("select `e0`.* from `author2` as `e0` force index(author2_born_index) where `e0`.`favourite_book_uuid_pk` in ('1', '2', '3')");
 
     const sql2 = orm.em.createQueryBuilder(Author2).withSchema('my_schema')
-      .indexHint('force index(custom_email_index_name)')
+      .indexHint('force index(author2_born_index)')
       .where({ favouriteBook: { $in: ['1', '2', '3'] } })
       .getFormattedQuery();
-    expect(sql2).toBe("select `e0`.* from `my_schema`.`author2` as `e0` force index(custom_email_index_name) where `e0`.`favourite_book_uuid_pk` in ('1', '2', '3')");
+    expect(sql2).toBe("select `e0`.* from `my_schema`.`author2` as `e0` force index(author2_born_index) where `e0`.`favourite_book_uuid_pk` in ('1', '2', '3')");
 
     const sql3 = orm.em.createQueryBuilder(Author2).withSchema('my_schema')
       .update({ name: '...' })
-      .indexHint('force index(custom_email_index_name)')
+      .indexHint('force index(author2_born_index)')
       .where({ favouriteBook: { $in: ['1', '2', '3'] } })
       .getFormattedQuery();
-    expect(sql3).toBe("update `my_schema`.`author2` force index(custom_email_index_name) set `name` = '...' where `favourite_book_uuid_pk` in ('1', '2', '3')");
+    expect(sql3).toBe("update `my_schema`.`author2` force index(author2_born_index) set `name` = '...' where `favourite_book_uuid_pk` in ('1', '2', '3')");
   });
 
   test('query comments', async () => {

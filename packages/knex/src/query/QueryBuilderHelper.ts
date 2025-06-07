@@ -123,13 +123,17 @@ export class QueryBuilderHelper {
       const alias2 = this.platform.quoteIdentifier(a).toString();
       const aliased = this.platform.quoteIdentifier(prop.fieldNames[0]).toString();
       const as = alias === null ? '' : ` as ${aliased}`;
-      let value = prop.formula(alias2);
+      let key = prop.formula(alias2);
 
-      if (!this.isTableNameAliasRequired(type)) {
-        value = value.replaceAll(alias2 + '.', '');
+      if (isRaw(key)) {
+        key = this.platform.formatQuery(key.sql, key.params);
       }
 
-      return raw(`${value}${as}`);
+      if (!this.isTableNameAliasRequired(type)) {
+        key = key.replaceAll(alias2 + '.', '');
+      }
+
+      return raw(`${key}${as}`);
     }
 
     if (prop?.hasConvertToJSValueSQL && type !== QueryType.UPSERT) {
@@ -271,7 +275,12 @@ export class QueryBuilderHelper {
 
         if (join.prop.formula) {
           const alias = this.platform.quoteIdentifier(join.ownerAlias);
-          const left = join.prop.formula(alias);
+          let left = join.prop.formula(alias);
+
+          if (isRaw(left)) {
+            left = this.platform.formatQuery(left.sql, left.params);
+          }
+
           conditions.push(`${left} = ${this.platform.quoteIdentifier(right)}`);
           return;
         }
@@ -305,7 +314,9 @@ export class QueryBuilderHelper {
     } else if (join.subquery) {
       sql += `(${join.subquery}) as ${this.platform.quoteIdentifier(join.alias)}`;
     } else {
-      sql += `${this.platform.quoteIdentifier(table)} as ${this.platform.quoteIdentifier(join.alias)}`;
+      sql += this.platform.quoteIdentifier(table)
+        + (this.platform.usesAsKeyword() ? ' as ' : ' ')
+        + this.platform.quoteIdentifier(join.alias);
     }
 
     const oldAlias = this.alias;
@@ -825,48 +836,6 @@ export class QueryBuilderHelper {
     }
 
     return ret;
-  }
-
-  finalize(type: QueryType, qb: NativeQueryBuilder, meta?: EntityMetadata, data?: Dictionary, returning?: Field<any>[]): void {
-    const usesReturningStatement = this.platform.usesReturningStatement() || this.platform.usesOutputStatement();
-
-    if (!meta || !data || !usesReturningStatement) {
-      return;
-    }
-
-    // always respect explicit returning hint
-    if (returning && returning.length > 0) {
-      qb.returning(returning.map(field => this.mapper(field as string, type)));
-
-      return;
-    }
-
-    if (type === QueryType.INSERT) {
-      const returningProps = meta.hydrateProps
-        .filter(prop => prop.returning || (prop.persist !== false && ((prop.primary && prop.autoincrement) || prop.defaultRaw)))
-        .filter(prop => !(prop.name in data));
-
-      if (returningProps.length > 0) {
-        qb.returning(Utils.flatten(returningProps.map(prop => prop.fieldNames)));
-      }
-
-      return;
-    }
-
-    if (type === QueryType.UPDATE) {
-      const returningProps = meta.hydrateProps.filter(prop => prop.fieldNames && isRaw(data[prop.fieldNames[0]]));
-
-      if (returningProps.length > 0) {
-        qb.returning(returningProps.flatMap(prop => {
-          if (prop.hasConvertToJSValueSQL) {
-            const aliased = this.platform.quoteIdentifier(prop.fieldNames[0]);
-            const sql = prop.customType!.convertToJSValueSQL!(aliased, this.platform) + ' as ' + this.platform.quoteIdentifier(prop.fieldNames[0]);
-            return [raw(sql)];
-          }
-          return prop.fieldNames;
-        }) as any);
-      }
-    }
   }
 
   splitField<T>(field: EntityKey<T>, greedyAlias = false): [string, EntityKey<T>, string | undefined] {

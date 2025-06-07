@@ -246,7 +246,7 @@ export abstract class Platform {
   }
 
   getTextTypeDeclarationSQL(_column: { length?: number }): string {
-    return `text`;
+    return 'text';
   }
 
   getEnumTypeDeclarationSQL(column: { items?: unknown[]; fieldNames: string[]; length?: number; unsigned?: boolean; autoincrement?: boolean }): string {
@@ -416,6 +416,18 @@ export abstract class Platform {
   }
 
   convertIntervalToDatabaseValue(value: unknown): unknown {
+    return value;
+  }
+
+  usesAsKeyword(): boolean {
+    return true;
+  }
+
+  convertUuidToJSValue(value: unknown): unknown {
+    return value;
+  }
+
+  convertUuidToDatabaseValue(value: unknown): unknown {
     return value;
   }
 

@@ -53,8 +53,6 @@ export class SqlSchemaGenerator extends AbstractSchemaGenerator<AbstractSqlDrive
         this.config.set('dbName', managementDbName);
         await this.driver.reconnect();
         await this.createDatabase(dbName);
-        this.config.set('dbName', dbName);
-        await this.driver.reconnect();
       }
 
       if (options?.create) {
@@ -372,10 +370,9 @@ export class SqlSchemaGenerator extends AbstractSchemaGenerator<AbstractSqlDrive
    */
   override async createDatabase(name?: string): Promise<void> {
     name ??= this.config.get('dbName')!;
-    const sql = this.helper.getCreateDatabaseSQL('' + this.platform.quoteIdentifier(name));
+    const sql = this.helper.getCreateDatabaseSQL(name);
 
     if (sql) {
-      // console.log(sql);
       await this.execute(sql);
     }
 

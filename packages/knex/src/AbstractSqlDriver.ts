@@ -1323,7 +1323,13 @@ export abstract class AbstractSqlDriver<Connection extends AbstractSqlConnection
 
     if (prop.formula) {
       const alias = this.platform.quoteIdentifier(tableAlias);
-      return [raw(`${prop.formula!(alias)} as ${aliased}`)];
+      let key = prop.formula!(alias);
+
+      if (isRaw(key)) {
+        key = this.platform.formatQuery(key.sql, key.params);
+      }
+
+      return [raw(`${key} as ${aliased}`)];
     }
 
     return prop.fieldNames.map(fieldName => {
@@ -1688,7 +1694,13 @@ export abstract class AbstractSqlDriver<Connection extends AbstractSqlConnection
         .forEach(prop => {
           const a = this.platform.quoteIdentifier(alias);
           const aliased = this.platform.quoteIdentifier(prop.fieldNames[0]);
-          ret.push(raw(`${prop.formula!(a)} as ${aliased}`));
+          let key = prop.formula!(a);
+
+          if (isRaw(key)) {
+            key = this.platform.formatQuery(key.sql, key.params);
+          }
+
+          ret.push(raw(`${key} as ${aliased}`));
         });
 
       meta.props

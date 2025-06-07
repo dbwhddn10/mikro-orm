@@ -12,6 +12,22 @@ export class UuidType extends Type<string | null | undefined> {
     return 'string';
   }
 
+  override convertToDatabaseValue(value: string | null | undefined, platform: Platform): string | null {
+    if (!value) {
+      return value!;
+    }
+
+    return platform.convertUuidToDatabaseValue(value) as string;
+  }
+
+  override convertToJSValue(value: string | null | undefined, platform: Platform): string | null | undefined {
+    if (!value) {
+      return value;
+    }
+
+    return platform.convertUuidToJSValue(value) as string;
+  }
+
   override ensureComparable(): boolean {
     return false;
   }

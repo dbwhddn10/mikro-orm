@@ -13,9 +13,8 @@ import {
   type Transaction,
   Utils,
 } from '@mikro-orm/knex';
-// import { OracleDialect } from 'kysely-oracledb';
 import { CompiledQuery } from 'kysely';
-import oracledb, { type PoolAttributes } from 'oracledb';
+import oracledb, { type ExecuteOptions, type PoolAttributes } from 'oracledb';
 
 export class OracleConnection extends AbstractSqlConnection {
 
@@ -30,11 +29,22 @@ export class OracleConnection extends AbstractSqlConnection {
       sessionCallback: onCreateConnection,
     });
 
-    // FIXME ideally this would be set locally, we could hack it via postprocessing, based on `res.metaData`
-    //   which we can use to find what columns are CLOBs, and map them to strings afterwards
-    oracledb.fetchAsString = [oracledb.DB_TYPE_CLOB, oracledb.DB_TYPE_NUMBER];
+    const executeOptions: ExecuteOptions = {
+      fetchTypeHandler: metaData => {
+        const bigInt = metaData.dbType === oracledb.DB_TYPE_NUMBER && metaData.precision! > 10;
+        metaData.name = metaData.name.toLowerCase();
 
-    return new OracleDialect({ pool });
+        if (bigInt || metaData.dbType === oracledb.DB_TYPE_CLOB) {
+          return {
+            type: oracledb.DB_TYPE_VARCHAR,
+          };
+        }
+
+        return undefined;
+      },
+    };
+
+    return new OracleDialect({ pool, executeOptions });
   }
 
   mapOptions(overrides: PoolAttributes): PoolAttributes {
@@ -70,17 +80,21 @@ export class OracleConnection extends AbstractSqlConnection {
       query = query.slice(0, -1);
     }
 
-    const last = params[params.length - 1];
+    let last = params[params.length - 1];
+    let rawQuery: string | undefined;
 
-    if (!Utils.isObject(last) || !('__outBindings' in last) || !last.__outBindings) {
-      return super.execute(query, params, method, ctx, loggerContext);
+    if (Utils.isObject(last) && '__outBindings' in last && last.__outBindings) {
+      rawQuery = last.__rawQuery;
+      delete last.__outBindings;
+      delete last.__rawQuery;
+      (params as unknown[]).pop(); // FIXME maybe a bit too hackish?
+    } else {
+      last = undefined;
     }
 
-    delete last.__outBindings;
     query = this.config.get('onQuery')(query, params);
-    (params as unknown[]).pop(); // FIXME maybe a bit too hackish?
     const formatted = this.platform.formatQuery(query, params);
-    const sql = this.getSql(query, formatted, loggerContext);
+    const sql = this.getSql(rawQuery ?? query, formatted, loggerContext);
 
     return this.executeQuery<T>(sql, async () => {
       const compiled = CompiledQuery.raw(formatted, last as unknown[]);
@@ -165,8 +179,12 @@ export class OracleConnection extends AbstractSqlConnection {
       res.rows = rows;
     }
 
+    const affectedRows = hasEmptyCount
+      ? emptyRow
+      : (res.numAffectedRows == null ? 0 : Number(res.numAffectedRows));
+
     return {
-      affectedRows: hasEmptyCount ? emptyRow : Number(res.numAffectedRows),
+      affectedRows,
       row: res.rows[0],
       rows: res.rows,
     } as unknown as T;

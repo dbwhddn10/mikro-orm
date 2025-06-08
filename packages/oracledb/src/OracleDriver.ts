@@ -44,8 +44,9 @@ export class OracleDriver extends AbstractSqlDriver<OracleConnection, OraclePlat
     options.convertCustomTypes ??= true;
     const meta = this.metadata.get<T>(entityName);
     const qb = this.createQueryBuilder<T>(entityName, options.ctx, 'write', options.convertCustomTypes).withSchema(this.getSchemaName(meta, options));
+    qb.insert(data as RequiredEntityData<T>[]);
 
-    return qb.insert(data as RequiredEntityData<T>[]).execute('run');
+    return this.rethrow(qb.execute('run'));
   }
 
   override async nativeUpdateMany<T extends object>(entityName: string, where: FilterQuery<T>[], data: EntityDictionary<T>[], options: NativeInsertUpdateManyOptions<T> & UpsertManyOptions<T> = {}): Promise<QueryResult<T>> {

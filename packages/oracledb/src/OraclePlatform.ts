@@ -315,7 +315,19 @@ export class OraclePlatform extends AbstractSqlPlatform {
     return super.quoteIdentifier(id, '"');
   }
 
-  override quoteValue(value: any): string {
+  override escape(value: any): string {
+    if (value === null) {
+      return 'null';
+    }
+
+    if (typeof value === 'string') {
+      if (value.includes(`'`)) {
+        return `'${value.replaceAll(`'`, `''`)}'`;
+      }
+
+      return `'${value}'`;
+    }
+
     if (Buffer.isBuffer(value)) {
       return `hextoraw('${value.toString('hex')}')`;
     }
@@ -324,15 +336,7 @@ export class OraclePlatform extends AbstractSqlPlatform {
       return `timestamp '${value.toISOString().replace('T', ' ').substring(0, 23)} UTC'`;
     }
 
-    if (typeof value === 'string' && value.includes(`'`)) {
-      return `'${value.replaceAll(`'`, `''`)}'`;
-    }
-
-    if (typeof value === 'string') {
-      return `'${value}'`;
-    }
-
-    return super.quoteValue(value);
+    return super.escape(value);
   }
 
   // FIXME

@@ -1465,7 +1465,7 @@ export class QueryBuilder<
     return Utils.unique(ret) as string[];
   }
 
-  private init(type: QueryType, data?: any, cond?: any): this {
+  protected init(type: QueryType, data?: any, cond?: any): this {
     this.ensureNotFinalized();
     this._type = type;
 

@@ -87,6 +87,7 @@ export class OracleNativeQueryBuilder extends NativeQueryBuilder {
     // multi insert with returning
     const sql = this.parts.join(' ');
     let block = 'begin\n';
+    let block2 = 'begin\n';
     const keys = Object.keys(copy[0]);
     const last = this.params[this.params.length - 1];
 
@@ -109,6 +110,7 @@ export class OracleNativeQueryBuilder extends NativeQueryBuilder {
         }
       }
 
+      // we need to interpolate to allow proper escaping
       const formatted = this.platform.formatQuery(sql, params).replaceAll(`'`, `''`);
       const mapToOracleType = (this.platform as any).mapToOracleType; // we can't import it here
       const using = this.options.returning!.map(field => {
@@ -122,9 +124,14 @@ export class OracleNativeQueryBuilder extends NativeQueryBuilder {
         return `out :${name}__${i}`;
       });
       block += ` execute immediate '${formatted}' using ${using.join(', ')};\n`;
+      block2 += ` execute immediate '${sql}' using ${using.join(', ')};\n`;
     }
 
     block += ' end;';
+    block2 += ' end;';
+
+    // save raw query without interpolation for logging,
+    Object.defineProperty(outBindings, '__rawQuery', { value: block2, writable: true, configurable: true, enumerable: false });
 
     return { sql: block, params: [outBindings] };
   }

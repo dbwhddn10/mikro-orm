@@ -76,7 +76,6 @@ class OracleConnection implements DatabaseConnection {
   #connection: Connection;
 
   constructor(connection: Connection, executeOptions?: ExecuteOptions) {
-    // Initialize OracleConnection with connection and options
     this.#executeOptions = executeOptions ?? {};
     this.#connection = connection;
   }

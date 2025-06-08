@@ -273,30 +273,10 @@ export class OracleSchemaHelper extends SchemaHelper {
   }
 
   private getChecksSQL(tablesBySchemas: Map<string | undefined, Table[]>): string {
-//     return `select
-//     con.constraint_name as name,
-//     con.owner as schema_name,
-//     con.table_name,
-//     (select case when COUNT(acc.column_name) = 1 then MIN(acc.column_name) else NULL end
-//      from all_cons_columns acc
-//      where
-//          acc.owner = con.owner
-//          and acc.constraint_name = con.constraint_name
-//          and acc.table_name = con.table_name
-//     ) as column_name,
-//     con.search_condition as expression
-// from
-//     all_constraints con
-// where
-//     con.constraint_type = 'C' -- Filtrujeme pouze CHECK omezení
-// -- Pokud chcete filtrovat pro konkrétní schéma:
-// -- and con.owner = 'NAZEV_VASEHO_SCHEMATU'
-// ORDER BY
-//     con.constraint_name`;
     return `select con.constraint_name as name,
       con.owner schema_name,
       con.table_name table_name,
-     (select case when COUNT(acc.column_name) = 1 then MIN(acc.column_name) else NULL end
+     (select case when count(acc.column_name) = 1 then min(acc.column_name) else null end
       from all_cons_columns acc
       where
         acc.owner = con.owner

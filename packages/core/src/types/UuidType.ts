@@ -9,7 +9,7 @@ export class UuidType extends Type<string | null | undefined> {
   }
 
   override compareAsType(): string {
-    return 'string';
+    return 'any';
   }
 
   override convertToDatabaseValue(value: string | null | undefined, platform: Platform): string | null {

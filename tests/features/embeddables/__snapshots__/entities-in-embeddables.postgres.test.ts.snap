@@ -222,7 +222,7 @@ exports[`embedded entities in postgres > diffing 2`] = `
   if (data.id === null) {
     entity.id = null;
   } else if (typeof data.id !== 'undefined') {
-    entity.id = typeof data.id === 'string' ? +data.id : data.id;
+    entity.id = data.id;
   }
   if (data.name === null) {
     entity.name = null;

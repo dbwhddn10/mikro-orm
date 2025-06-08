@@ -1363,8 +1363,8 @@ describe('EntityManagerOracle', () => {
     expect(publishers2[0].tests.count()).toBe(0);
 
     expect(mock.mock.calls).toHaveLength(2);
-    expect(mock.mock.calls[0][0]).toMatch('select "p0".* from "publisher2" as "p0" order by "p0"."id" asc');
-    expect(mock.mock.calls[1][0]).toMatch('select "p0"."test2_id" as "fk__test2_id", "p0"."publisher2_id" as "fk__publisher2_id" from "publisher2_tests" as "p0" where "p0"."publisher2_id" in (1, 2) order by "p0"."id" asc');
+    expect(mock.mock.calls[0][0]).toMatch('select "p0".* from "publisher2" "p0" order by "p0"."id" asc');
+    expect(mock.mock.calls[1][0]).toMatch('select "p0"."test2_id" "fk__test2_id", "p0"."publisher2_id" "fk__publisher2_id" from "publisher2_tests" "p0" where "p0"."publisher2_id" in (1, 2) order by "p0"."id" asc');
     mock.mockReset();
     orm.em.clear();
 
@@ -1385,7 +1385,7 @@ describe('EntityManagerOracle', () => {
     expect(wrap(publishers3[1].tests[0]).isInitialized()).toBe(false);
 
     expect(mock.mock.calls).toHaveLength(1);
-    expect(mock.mock.calls[0][0]).toMatch('select "p0".*, "t1"."publisher2_id" as "t1__publisher2_id", "t1"."test2_id" as "t1__test2_id" from "publisher2" as "p0" left join "publisher2_tests" as "t1" on "p0"."id" = "t1"."publisher2_id" order by "p0"."id" asc, "t1"."id" asc');
+    expect(mock.mock.calls[0][0]).toMatch('select "p0".*, "t1"."publisher2_id" "t1__publisher2_id", "t1"."test2_id" "t1__test2_id" from "publisher2" "p0" left join "publisher2_tests" "t1" on "p0"."id" = "t1"."publisher2_id" order by "p0"."id" asc, "t1"."id" asc');
     mock.mockReset();
     orm.em.clear();
 
@@ -1411,7 +1411,7 @@ describe('EntityManagerOracle', () => {
     mock.mockReset();
     await publishers5[0].tests.init({ ref: true });
     expect(mock.mock.calls).toHaveLength(1);
-    expect(mock.mock.calls[0][0]).toMatch('select "p0"."test2_id" as "fk__test2_id", "p0"."publisher2_id" as "fk__publisher2_id" from "publisher2_tests" as "p0" where "p0"."publisher2_id" in (1) order by "p0"."id" asc');
+    expect(mock.mock.calls[0][0]).toMatch('select "p0"."test2_id" "fk__test2_id", "p0"."publisher2_id" "fk__publisher2_id" from "publisher2_tests" "p0" where "p0"."publisher2_id" in (1) order by "p0"."id" asc');
     await publishers5[1].tests.init({ ref: true });
     expect(publishers5).toBeInstanceOf(Array);
     expect(publishers5.length).toBe(2);
@@ -1449,9 +1449,9 @@ describe('EntityManagerOracle', () => {
       filters: false,
     });
     expect(mock).toHaveBeenCalledTimes(1);
-    expect(mock.mock.calls[0][0]).toMatch('select "b0".*, "b1"."book_tag2_id" as "b1__book_tag2_id", "b1"."book2_uuid_pk" as "b1__book2_uuid_pk" ' +
-      'from "book_tag2" as "b0" ' +
-      'left join "book2_tags" as "b1" on "b0"."id" = "b1"."book_tag2_id" ' +
+    expect(mock.mock.calls[0][0]).toMatch('select "b0".*, "b1"."book_tag2_id" "b1__book_tag2_id", "b1"."book2_uuid_pk" "b1__book2_uuid_pk" ' +
+      'from "book_tag2" "b0" ' +
+      'left join "book2_tags" "b1" on "b0"."id" = "b1"."book_tag2_id" ' +
       `where "b0"."id" = '1' ` +
       'order by "b1"."order" asc');
     expect(bt1.books.isInitialized()).toBe(true);
@@ -1466,9 +1466,9 @@ describe('EntityManagerOracle', () => {
       filters: false,
     });
     expect(mock).toHaveBeenCalledTimes(2);
-    expect(mock.mock.calls[0][0]).toMatch(`select "b0".* from "book_tag2" as "b0" where "b0"."id" = '1' limit 1`);
-    expect(mock.mock.calls[1][0]).toMatch('select "b0"."book_tag2_id" as "fk__book_tag2_id", "b0"."book2_uuid_pk" as "fk__book2_uuid_pk" ' +
-      'from "book2_tags" as "b0" ' +
+    expect(mock.mock.calls[0][0]).toMatch(`select "b0".* from "book_tag2" "b0" where "b0"."id" = '1' and rownum <= 1`);
+    expect(mock.mock.calls[1][0]).toMatch('select "b0"."book_tag2_id" "fk__book_tag2_id", "b0"."book2_uuid_pk" "fk__book2_uuid_pk" ' +
+      'from "book2_tags" "b0" ' +
       `where "b0"."book_tag2_id" in ('1') ` +
       'order by "b0"."order" asc');
     expect(bt2.books.isInitialized()).toBe(true);
@@ -1498,7 +1498,7 @@ describe('EntityManagerOracle', () => {
       strategy: 'joined',
     });
     expect(mock).toHaveBeenCalledTimes(1);
-    expect(mock.mock.calls[0][0]).toMatch('select "a0".*, "b1"."uuid_pk" as "b1__uuid_pk", "f2"."uuid_pk" as "f2__uuid_pk" from "author2" as "a0" left join "book2" as "b1" on "a0"."id" = "b1"."author_id" and "b1"."author_id" is not null left join "book2" as "f2" on "a0"."favourite_book_uuid_pk" = "f2"."uuid_pk" and "f2"."author_id" is not null where "a0"."id" = 1 order by "b1"."title" asc');
+    expect(mock.mock.calls[0][0]).toMatch('select "a0".*, "b1"."uuid_pk" "b1__uuid_pk", "f2"."uuid_pk" "f2__uuid_pk" from "author2" "a0" left join "book2" "b1" on "a0"."id" = "b1"."author_id" and "b1"."author_id" is not null left join "book2" "f2" on "a0"."favourite_book_uuid_pk" = "f2"."uuid_pk" and "f2"."author_id" is not null where "a0"."id" = 1 order by "b1"."title" asc');
     expect(a1.books.isInitialized()).toBe(true);
     expect(a1.books.isInitialized(true)).toBe(false);
     expect(wrap(a1.books[0]).isInitialized()).toBe(false);
@@ -1510,8 +1510,8 @@ describe('EntityManagerOracle', () => {
       strategy: 'select-in',
     });
     expect(mock).toHaveBeenCalledTimes(2);
-    expect(mock.mock.calls[0][0]).toMatch('select "a0".* from "author2" as "a0" where "a0"."id" = 1 limit 1');
-    expect(mock.mock.calls[1][0]).toMatch('select "b0"."uuid_pk", "b0"."author_id" from "book2" as "b0" where "b0"."author_id" is not null and "b0"."author_id" in (1) order by "b0"."title" asc');
+    expect(mock.mock.calls[0][0]).toMatch('select "a0".* from "author2" "a0" where "a0"."id" = 1 and rownum <= 1');
+    expect(mock.mock.calls[1][0]).toMatch('select "b0"."uuid_pk", "b0"."author_id" from "book2" "b0" where "b0"."author_id" is not null and "b0"."author_id" in (1) order by "b0"."title" asc');
     expect(a2.books.isInitialized()).toBe(true);
     expect(a2.books.isInitialized(true)).toBe(false);
     expect(wrap(a2.books[0]).isInitialized()).toBe(false);
@@ -1719,8 +1719,8 @@ describe('EntityManagerOracle', () => {
     });
     expect(res).toHaveLength(1);
     expect(res[0].books.length).toBe(3);
-    expect(mock.mock.calls[0][0]).toMatch('select "a0".*, "f1"."uuid_pk" as "f1__uuid_pk" from "author2" as "a0" left join "book2" as "f1" on "a0"."favourite_book_uuid_pk" = "f1"."uuid_pk" and "f1"."author_id" is not null left join "book2" as "b2" on "a0"."id" = "b2"."author_id" and "b2"."author_id" is not null where "b2"."title" in (?, ?)');
-    expect(mock.mock.calls[1][0]).toMatch('select "b0".*, "b0"."price" * 1.19 as "price_taxed" from "book2" as "b0" where "b0"."author_id" is not null and "b0"."author_id" in (?) order by "b0"."title" asc');
+    expect(mock.mock.calls[0][0]).toMatch('select "a0".*, "f1"."uuid_pk" "f1__uuid_pk" from "author2" "a0" left join "book2" "f1" on "a0"."favourite_book_uuid_pk" = "f1"."uuid_pk" and "f1"."author_id" is not null left join "book2" "b2" on "a0"."id" = "b2"."author_id" and "b2"."author_id" is not null where "b2"."title" in (?, ?)');
+    expect(mock.mock.calls[1][0]).toMatch('select "b0".*, "b0"."price" * 1.19 as "price_taxed" from "book2" "b0" where "b0"."author_id" is not null and "b0"."author_id" in (?) order by "b0"."title" asc');
   });
 
   test('trying to populate non-existing or non-reference property will throw', async () => {
@@ -1843,7 +1843,7 @@ describe('EntityManagerOracle', () => {
     expect(mock.mock.calls[2][0]).toMatch('insert into "book2" ("uuid_pk", "created_at", "title", "author_id") values (?, ?, ?, ?), (?, ?, ?, ?), (?, ?, ?, ?)');
     expect(mock.mock.calls[3][0]).toMatch('update "author2" set "favourite_author_id" = ?, "updated_at" = ? where "id" = ?');
     expect(mock.mock.calls[4][0]).toMatch('commit');
-    expect(mock.mock.calls[5][0]).toMatch('select "a0".*, "f1"."uuid_pk" as "f1__uuid_pk" from "author2" as "a0" left join "book2" as "f1" on "a0"."favourite_book_uuid_pk" = "f1"."uuid_pk" and "f1"."author_id" is not null where "a0"."id" = ? and rownum <= ?');
+    expect(mock.mock.calls[5][0]).toMatch('select "a0".*, "f1"."uuid_pk" "f1__uuid_pk" from "author2" "a0" left join "book2" "f1" on "a0"."favourite_book_uuid_pk" = "f1"."uuid_pk" and "f1"."author_id" is not null where "a0"."id" = ? and rownum <= ?');
   });
 
   test('allow assigning PK to undefined/null', async () => {
@@ -1866,18 +1866,18 @@ describe('EntityManagerOracle', () => {
     const books1 = await orm.em.find(Book2, {
       [sql.upper('title')]: ['B1', 'B2'],
       author: {
-        [raw(a => `${a}.age::text`)]: { $ilike: '%2%' },
+        [raw(a => `"${a}"."age"`)]: { $ilike: '%2%' },
       },
     }, { populate: ['perex'] });
     expect(books1).toHaveLength(2);
-    expect(mock.mock.calls[0][0]).toMatch(`select "b0".*, "b0"."price" * 1.19 as "price_taxed" from "book2" as "b0" left join "author2" as "a1" on "b0"."author_id" = "a1"."id" where "b0"."author_id" is not null and upper(title) in ('B1', 'B2') and a1.age::text ilike '%2%'`);
+    expect(mock.mock.calls[0][0]).toMatch(`select "b0".*, "b0"."price" * 1.19 as "price_taxed" from "book2" as "b0" left join "author2" as "a1" on "b0"."author_id" = "a1"."id" where "b0"."author_id" is not null and upper(title) in ('B1', 'B2') and "a1"."age"::text ilike '%2%'`);
     orm.em.clear();
 
     const books2 = await orm.em.find(Book2, {
-      [sql.upper('title')]: raw('upper(?)', ['b2']),
+      [sql.upper('"title"')]: raw('upper(?)', ['b2']),
     }, { populate: ['perex'] });
     expect(books2).toHaveLength(1);
-    expect(mock.mock.calls[1][0]).toMatch(`select "b0".*, "b0"."price" * 1.19 as "price_taxed" from "book2" as "b0" where "b0"."author_id" is not null and upper(title) = upper('b2')`);
+    expect(mock.mock.calls[1][0]).toMatch(`select "b0".*, "b0"."price" * 1.19 as "price_taxed" from "book2" as "b0" where "b0"."author_id" is not null and upper("title") = upper('b2')`);
   });
 
   test('custom expressions require raw helper', async () => {
@@ -1915,7 +1915,7 @@ describe('EntityManagerOracle', () => {
     await orm.em.flush();
 
     expect(mock.mock.calls[0][0]).toMatch('begin');
-    expect(mock.mock.calls[1][0]).toMatch(/insert into "author2" \("id", "created_at", "updated_at", "name", "email", "age", "terms_accepted"\) values \(1, '.*', '.*', 'name', 'email', 100 \+ 20 \+ 3, false\) returning "age"/);
+    expect(mock.mock.calls[1][0]).toMatch(/insert into "author2" \("id", "created_at", "updated_at", "name", "email", "age", "terms_accepted"\) values \(1, timestamp '.*', timestamp '.*', 'name', 'email', 100 \+ 20 \+ 3, false\) returning "age" into :out_age/);
     expect(mock.mock.calls[2][0]).toMatch('commit');
 
     expect(author.age).toBe(123);
@@ -1933,7 +1933,7 @@ describe('EntityManagerOracle', () => {
     await orm.em.flush();
 
     expect(mock.mock.calls[0][0]).toMatch('begin');
-    expect(mock.mock.calls[1][0]).toMatch(/update "author2" set "favourite_author_id" = NULL, "updated_at" = '.*' where "id" = 2/);
+    expect(mock.mock.calls[1][0]).toMatch(/update "author2" set "favourite_author_id" = null, "updated_at" = timestamp '.*' where "id" = 2/);
     expect(mock.mock.calls[2][0]).toMatch('commit');
 
     expect(ref2.favouriteAuthor).toBeNull();
@@ -1948,14 +1948,14 @@ describe('EntityManagerOracle', () => {
     const ref2 = await orm.em.findOneOrFail(Author2, 2);
 
     const mock = mockLogger(orm, ['query', 'query-params']);
-    ref1.age = sql`age * 2`;
+    ref1.age = sql`"age" * 2`;
     expect(() => (ref1.age as number)++).toThrow();
     expect(() => ref2.age = ref1.age).toThrow();
     expect(() => JSON.stringify(ref1)).toThrow();
     await orm.em.flush();
 
     expect(mock.mock.calls[0][0]).toMatch('begin');
-    expect(mock.mock.calls[1][0]).toMatch(/update "author2" set "age" = age \* 2, "updated_at" = '.*' where "id" = 1 returning "age"/);
+    expect(mock.mock.calls[1][0]).toMatch(/update "author2" set "age" = "age" \* 2, "updated_at" = timestamp '.*' where "id" = 1 returning "age" into :out_age/);
     expect(mock.mock.calls[2][0]).toMatch('commit');
 
     expect(ref1.age).toBe(246);
@@ -1970,13 +1970,13 @@ describe('EntityManagerOracle', () => {
 
     const ref1 = orm.em.getReference(Author2, 1);
     const ref2 = orm.em.getReference(Author2, 2);
-    ref1.age = raw(`age * 2`);
-    ref2.age = raw(`age / 2`);
+    ref1.age = raw(`"age" * 2`);
+    ref2.age = raw(`"age" / 2`);
 
     await orm.em.flush();
 
     expect(mock.mock.calls[0][0]).toMatch('begin');
-    expect(mock.mock.calls[1][0]).toMatch(/update "author2" set "age" = case when \("id" = 1\) then age \* 2 when \("id" = 2\) then age \/ 2 else "age" end, "updated_at" = case when \("id" = 1\) then '.*' when \("id" = 2\) then '.*' else "updated_at" end where "id" in \(1, 2\) returning "age"/);
+    expect(mock.mock.calls[1][0]).toMatch(/update "author2" set "age" = case when \("id" = 1\) then "age" \* 2 when \("id" = 2\) then "age" \/ 2 else "age" end, "updated_at" = case when \("id" = 1\) then timestamp '.*' when \("id" = 2\) then timestamp '.*' else "updated_at" end where "id" in \(1, 2\) returning "age", "id" into :age, :id/);
     expect(mock.mock.calls[2][0]).toMatch('commit');
 
     expect(ref1.age).toBe(246);
@@ -2303,8 +2303,8 @@ describe('EntityManagerOracle', () => {
     await expect(driver.nativeInsert('not_existing', { foo: 'bar' })).rejects.toThrow(TableNotFoundException);
     await expect(driver.execute('create table author2 (foo clob not null)')).rejects.toThrow(TableExistsException);
     await expect(driver.execute('foo bar 123')).rejects.toThrow(SyntaxErrorException);
-    await expect(driver.execute('select id from author2, foo_bar2')).rejects.toThrow(NonUniqueFieldNameException);
-    await expect(driver.execute('select uuid from author2')).rejects.toThrow(InvalidFieldNameException);
+    await expect(driver.execute('select "id" from "author2", "foo_bar2"')).rejects.toThrow(NonUniqueFieldNameException);
+    await expect(driver.execute('select "uuid" from "author2"')).rejects.toThrow(InvalidFieldNameException);
   });
 
   test('question marks and parameter interpolation (GH issue #920)', async () => {
@@ -2561,10 +2561,8 @@ describe('EntityManagerOracle', () => {
     expect(b.publisher.unwrap()).toBe(ref2);
 
     expect(mock.mock.calls[0][0]).toMatch('begin');
-    // expect(mock.mock.calls[1][0]).toMatch(`insert into "author2" ("created_at", "updated_at", "name", "email", "terms_accepted") values (timestamp '2025-06-06 21:04:17.437', timestamp '2025-06-06 21:04:17.437', 'a', 'e', false) returning "id", "created_at", "updated_at", "age", "terms_accepted" into :id, :created_at, :updated_at, :age, :terms_accepted`);
-    // expect(mock.mock.calls[2][0]).toMatch(`insert into "book2" ("uuid_pk", "created_at", "title", "price", "author_id", "publisher_id") values (hextoraw('ec43e7114c964b7b980e1088b378393f'), timestamp '2025-06-06 21:04:17.437', 't', 123, 1, 1) returning "created_at", "title" into :created_at, :title`);
-    // expect(mock.mock.calls[1][0]).toMatch('insert into "author2" ("created_at", "updated_at", "name", "email", "terms_accepted") values (?, ?, ?, ?, ?) returning "id", "age"');
-    // expect(mock.mock.calls[2][0]).toMatch('insert into "book2" ("uuid_pk", "created_at", "title", "price", "author_id", "publisher_id") values (?, ?, ?, ?, ?, ?)');
+    expect(mock.mock.calls[1][0]).toMatch('insert into "author2" ("created_at", "updated_at", "name", "email", "terms_accepted") values (?, ?, ?, ?, ?) returning "id", "age" into :out_id, :out_age');
+    expect(mock.mock.calls[2][0]).toMatch('insert into "book2" ("uuid_pk", "created_at", "title", "price", "author_id", "publisher_id") values (?, ?, ?, ?, ?, ?)');
     expect(mock.mock.calls[3][0]).toMatch('commit');
     expect(mock.mock.calls[4][0]).toMatch('begin');
     expect(mock.mock.calls[5][0]).toMatch('update "book2" set "publisher_id" = ? where "uuid_pk" = ?');
@@ -2602,9 +2600,10 @@ describe('EntityManagerOracle', () => {
 
     // flushing things at the same tick will even batch the queries
     expect(mock.mock.calls[0][0]).toMatch('begin');
-    expect(mock.mock.calls[1][0]).toMatch('insert into "author2" ("created_at", "updated_at", "name", "email", "terms_accepted") values (?, ?, ?, ?, ?), (?, ?, ?, ?, ?), (?, ?, ?, ?, ?) returning "id", "age"');
+    expect(mock.mock.calls[1][0]).toMatch(`begin execute immediate 'insert into "author2" ("created_at", "updated_at", "name", "email", "terms_accepted") values (?, ?, ?, ?, ?) returning "id", "age" into :out_id, :out_age' using out :id__0, out :age__0; execute immediate 'insert into "author2" ("created_at", "updated_at", "name", "email", "terms_accepted") values (?, ?, ?, ?, ?) returning "id", "age" into :out_id, :out_age' using out :id__1, out :age__1; execute immediate 'insert into "author2" ("created_at", "updated_at", "name", "email", "terms_accepted") values (?, ?, ?, ?, ?) returning "id", "age" into :out_id, :out_age' using out :id__2, out :age__2; end;`);
     expect(mock.mock.calls[2][0]).toMatch('insert into "book2" ("uuid_pk", "created_at", "title", "price", "author_id") values (?, ?, ?, ?, ?), (?, ?, ?, ?, ?), (?, ?, ?, ?, ?)');
     expect(mock.mock.calls[3][0]).toMatch('commit');
+    expect(mock).toHaveBeenCalledTimes(4);
 
     expect(ret.map(b => b.author.id)).toEqual([1, 2, 3]);
     expect(ret.map(b => b.author.name)).toEqual(['a1', 'a2', 'a3']);
@@ -2657,6 +2656,7 @@ describe('EntityManagerOracle', () => {
     expect(mock.mock.calls[9][0]).toMatch(`insert into "author2" ("created_at", "updated_at", "name", "email", "terms_accepted") values (?, ?, ?, ?, ?) returning "id", "age"`);
     expect(mock.mock.calls[10][0]).toMatch(`insert into "book2" ("uuid_pk", "created_at", "title", "price", "author_id") values (?, ?, ?, ?, ?)`);
     expect(mock.mock.calls[11][0]).toMatch(`commit`);
+    expect(mock).toHaveBeenCalledTimes(12);
 
     mock.mockRestore();
   });
@@ -2696,7 +2696,7 @@ describe('EntityManagerOracle', () => {
     await expect(orm.em.persistAndFlush(jon)).rejects.toThrow(`Value for Author2.email is required, 'undefined' found`);
 
     orm.config.set('validateRequired', false);
-    await expect(orm.em.persistAndFlush(jon)).rejects.toThrow(`null value in column "email" of relation "author2" violates not-null constraint`);
+    await expect(orm.em.persistAndFlush(jon)).rejects.toThrow(`ORA-01400: cannot insert NULL into ("mikro_orm_test"."author2"."email")`);
     await expect(orm.em.persistAndFlush(jon)).rejects.toThrow(NotNullConstraintViolationException);
     orm.config.set('validateRequired', true);
   });
@@ -2712,7 +2712,7 @@ describe('EntityManagerOracle', () => {
     const mock = mockLogger(orm);
     await orm.em.flush();
     expect(mock).toHaveBeenCalledTimes(3);
-    expect(mock.mock.calls[1][0]).toMatch(`update "foo_bar2" set "id" = 321, "version" = current_timestamp(0) where "id" = 1 and "version" = `);
+    expect(mock.mock.calls[1][0]).toMatch(`update "foo_bar2" set "id" = 321, "version" = current_timestamp where "id" = 1 and "version" = `);
 
     const c = await orm.em.fork().findOne(FooBar2, bar);
     expect(c).toBeDefined();
@@ -2740,7 +2740,8 @@ describe('EntityManagerOracle', () => {
     await orm.em.flush();
     expect(mock).toHaveBeenCalledTimes(4);
     expect(mock.mock.calls[1][0]).toMatch('select "f0"."id" from "foo_bar2" "f0" where (("f0"."id" = ? and "f0"."version" = ?) or ("f0"."id" = ? and "f0"."version" = ?))');
-    expect(mock.mock.calls[2][0]).toMatch('update "foo_bar2" set "id" = case when ("id" = ?) then ? when ("id" = ?) then ? else "id" end, "version" = current_timestamp(0) where "id" in (?, ?)');
+    // TODO we might need the `out_` prefix for the into params too?
+    expect(mock.mock.calls[2][0]).toMatch('update "foo_bar2" set "id" = case when ("id" = ?) then ? when ("id" = ?) then ? else "id" end, "version" = current_timestamp where "id" in (?, ?) returning "id", "version" into :id, :version');
 
     const c1 = await orm.em.fork().findOne(FooBar2, bars[0]);
     expect(c1).toBeDefined();

@@ -125,7 +125,7 @@ export class OracleConnection extends AbstractSqlConnection {
   }
 
   protected override transformRawResult<T>(res: any, method: 'all' | 'get' | 'run'): T {
-    // console.log('transformRawResult', res.rows, method, res.outBinds);
+    // console.log('transformRawResult', res, method, res.outBinds);
     if (method === 'get') {
       return res.rows[0];
     }
@@ -147,7 +147,7 @@ export class OracleConnection extends AbstractSqlConnection {
         const o: Dictionary = {};
 
         for (const key of keys) {
-          o[key] = res.outBinds[key][i];
+          o[key.replace(/^out_/, '')] = res.outBinds[key][i];
         }
 
         rows.push(o);

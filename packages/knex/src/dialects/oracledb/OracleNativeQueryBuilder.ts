@@ -66,9 +66,9 @@ export class OracleNativeQueryBuilder extends NativeQueryBuilder {
 
     if (this.options.returning) {
       const fields = this.options.returning.map(field => this.quote(Array.isArray(field) ? field[0] : field));
-      const into = this.options.returning.map(field => ':' + (Array.isArray(field) ? field[0] : field));
+      const into = this.options.returning.map(field => ':out_' + (Array.isArray(field) ? field[0] : field));
       const outBindings = this.options.returning.map(field => {
-        const name = Array.isArray(field) ? field[0] : field;
+        const name = 'out_' + (Array.isArray(field) ? field[0] : field);
         const type = Array.isArray(field) ? field[1] : 'string';
         return [name, type];
       });
@@ -104,8 +104,6 @@ export class OracleNativeQueryBuilder extends NativeQueryBuilder {
       for (const key of keys) {
         if (typeof copy[i][key] === 'undefined') {
           params.push(this.platform.usesDefaultKeyword() ? raw('default') : null);
-        } else if (copy[i][key] instanceof Date) {
-          params.push(raw(`timestamp '${copy[i][key].toISOString().replace('T', ' ').substring(0, 23)}'`));
         } else {
           params.push(copy[i][key]);
         }
@@ -129,76 +127,6 @@ export class OracleNativeQueryBuilder extends NativeQueryBuilder {
     block += ' end;';
 
     return { sql: block, params: [outBindings] };
-  }
-
-  protected override compileUpdate() {
-    if (!this.options.data || Object.keys(this.options.data).length === 0) {
-      throw new Error('No data provided');
-    }
-
-    this.parts.push('update');
-    this.addHintComment();
-    this.parts.push(this.getTableName());
-
-    if (this.options.joins) {
-      for (const join of this.options.joins) {
-        this.parts.push(join.sql);
-        this.params.push(...join.params);
-      }
-    }
-
-    this.parts.push('set');
-
-    if (this.options.data) {
-      const parts: string[] = [];
-
-      for (const key of Object.keys(this.options.data)) {
-        parts.push(`${this.quote(key)} = ?`);
-
-        if (this.options.data![key] instanceof Date) {
-          const value = this.options.data![key].toISOString().replace('T', ' ').substring(0, 23);
-          this.params.push(raw(`timestamp '${value}'`));
-        } else {
-          this.params.push(this.options.data![key]);
-        }
-      }
-
-      this.parts.push(parts.join(', '));
-    }
-
-    this.addOutputClause('inserted');
-
-    if (this.options.where?.sql.trim()) {
-      this.parts.push(`where ${this.options.where.sql}`);
-      this.params.push(...this.options.where.params);
-    }
-  }
-
-  protected override processInsertData() {
-    const dataAsArray = Utils.asArray(this.options.data);
-    const keys = Object.keys(dataAsArray[0]);
-    const values = keys.map(() => '?');
-    const parts = [];
-    this.parts.push(`(${keys.map(key => this.quote(key)).join(', ')})`);
-    this.addOutputClause('inserted');
-    this.parts.push('values');
-
-    for (const data of dataAsArray) {
-      for (const key of keys) {
-        if (typeof data[key] === 'undefined') {
-          this.params.push(this.platform.usesDefaultKeyword() ? raw('default') : null);
-        } else if (data[key] instanceof Date) {
-          const value = data[key].toISOString().replace('T', ' ').substring(0, 23);
-          this.params.push(raw(`timestamp '${value}'`));
-        } else {
-          this.params.push(data[key]);
-        }
-      }
-
-      parts.push(`(${values.join(', ')})`);
-    }
-
-    return parts;
   }
 
   protected override compileTruncate() {

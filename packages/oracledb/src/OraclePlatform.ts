@@ -320,6 +320,10 @@ export class OraclePlatform extends AbstractSqlPlatform {
       return `hextoraw('${value.toString('hex')}')`;
     }
 
+    if (value instanceof Date) {
+      return `timestamp '${value.toISOString().replace('T', ' ').substring(0, 23)} UTC'`;
+    }
+
     if (typeof value === 'string' && value.includes(`'`)) {
       return `'${value.replaceAll(`'`, `''`)}'`;
     }
@@ -375,14 +379,6 @@ export class OraclePlatform extends AbstractSqlPlatform {
   override getDefaultClientUrl(): string {
     return 'localhost:1521/freepdb1';
   }
-
-  // override processDateProperty(value: unknown): string | number | Date {
-  //   if (value instanceof Date) {
-  //     return raw(`timestamp '${value.toISOString().replace('T', ' ').substring(0, 19)}'`);
-  //   }
-  //
-  //   return value as number;
-  // }
 
   mapToOracleType(type: string): string {
     const map = {

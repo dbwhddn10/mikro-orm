@@ -134,7 +134,14 @@ export class OraclePlatform extends AbstractSqlPlatform {
   }
 
   override getRegExpOperator(): string {
-    return 'regexp_like'; // FIXME its a function
+    return 'regexp_like';
+  }
+
+  override mapRegExpCondition(mappedKey: string, value: { $re: string; $flags?: string }): { sql: string; params: unknown[] } {
+    const quotedKey = this.quoteIdentifier(mappedKey);
+    const quotedFlags = value.$flags ? `, ${this.quoteValue(value.$flags)}` : '';
+
+    return { sql: `regexp_like(${quotedKey}, ?${quotedFlags})`, params: [value.$re] };
   }
 
   override getBlobDeclarationSQL(): string {

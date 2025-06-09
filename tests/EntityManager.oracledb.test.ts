@@ -2052,13 +2052,13 @@ describe('EntityManagerOracle', () => {
       },
     });
     expect(mock.mock.calls[0][0]).toMatch('select "b0".*, "b0"."price" * 1.19 as "price_taxed", ' +
-      '"a1"."id" as "a1__id", "a1"."created_at" as "a1__created_at", "a1"."updated_at" as "a1__updated_at", "a1"."name" as "a1__name", "a1"."email" as "a1__email", "a1"."age" as "a1__age", "a1"."terms_accepted" as "a1__terms_accepted", "a1"."optional" as "a1__optional", "a1"."identities" as "a1__identities", "a1"."born" as "a1__born", "a1"."born_time" as "a1__born_time", "a1"."favourite_book_uuid_pk" as "a1__favourite_book_uuid_pk", "a1"."favourite_author_id" as "a1__favourite_author_id", "a1"."identity" as "a1__identity", ' +
-      '"b2"."uuid_pk" as "b2__uuid_pk", "b2"."created_at" as "b2__created_at", "b2"."isbn" as "b2__isbn", "b2"."title" as "b2__title", "b2"."price" as "b2__price", "b2"."price" * 1.19 as "b2__price_taxed", "b2"."double" as "b2__double", "b2"."meta" as "b2__meta", "b2"."author_id" as "b2__author_id", "b2"."publisher_id" as "b2__publisher_id", ' +
-      '"a3"."id" as "a3__id", "a3"."created_at" as "a3__created_at", "a3"."updated_at" as "a3__updated_at", "a3"."name" as "a3__name", "a3"."email" as "a3__email", "a3"."age" as "a3__age", "a3"."terms_accepted" as "a3__terms_accepted", "a3"."optional" as "a3__optional", "a3"."identities" as "a3__identities", "a3"."born" as "a3__born", "a3"."born_time" as "a3__born_time", "a3"."favourite_book_uuid_pk" as "a3__favourite_book_uuid_pk", "a3"."favourite_author_id" as "a3__favourite_author_id", "a3"."identity" as "a3__identity" ' +
+      '"a1"."id" "a1__id", "a1"."created_at" "a1__created_at", "a1"."updated_at" "a1__updated_at", "a1"."name" "a1__name", "a1"."email" "a1__email", "a1"."age" "a1__age", "a1"."terms_accepted" "a1__terms_accepted", "a1"."optional" "a1__optional", "a1"."identities" "a1__identities", "a1"."born" "a1__born", "a1"."born_time" "a1__born_time", "a1"."favourite_book_uuid_pk" "a1__favourite_book_uuid_pk", "a1"."favourite_author_id" "a1__favourite_author_id", "a1"."identity" "a1__identity", ' +
+      '"b2"."uuid_pk" "b2__uuid_pk", "b2"."created_at" "b2__created_at", "b2"."isbn" "b2__isbn", "b2"."title" "b2__title", "b2"."price" "b2__price", "b2"."price" * 1.19 as "b2__price_taxed", "b2"."double" "b2__double", "b2"."meta" as "b2__meta", "b2"."author_id" "b2__author_id", "b2"."publisher_id" "b2__publisher_id", ' +
+      '"a3"."id" "a3__id", "a3"."created_at" "a3__created_at", "a3"."updated_at" "a3__updated_at", "a3"."name" "a3__name", "a3"."email" "a3__email", "a3"."age" "a3__age", "a3"."terms_accepted" "a3__terms_accepted", "a3"."optional" "a3__optional", "a3"."identities" "a3__identities", "a3"."born" "a3__born", "a3"."born_time" "a3__born_time", "a3"."favourite_book_uuid_pk" "a3__favourite_book_uuid_pk", "a3"."favourite_author_id" "a3__favourite_author_id", "a3"."identity" "a3__identity" ' +
       'from "book2" "b0" ' +
-      'left join "author2" as "a1" on "b0"."author_id" = "a1"."id" ' +
+      'left join "author2" "a1" on "b0"."author_id" = "a1"."id" ' +
       'left join "book2" "b2" on "a1"."favourite_book_uuid_pk" = "b2"."uuid_pk" and "b2"."author_id" is not null ' +
-      'left join "author2" as "a3" on "b2"."author_id" = "a3"."id" ' +
+      'left join "author2" "a3" on "b2"."author_id" = "a3"."id" ' +
       'where "b0"."author_id" is not null and "a3"."name" = ?');
 
     orm.em.clear();
@@ -2067,13 +2067,13 @@ describe('EntityManagerOracle', () => {
     expect(res4).toHaveLength(3);
     expect(mock.mock.calls.length).toBe(1);
     expect(mock.mock.calls[0][0]).toMatch('select "b0"."uuid_pk", "b0"."created_at", "b0"."isbn", "b0"."title", "b0"."price", "b0"."double", "b0"."meta", "b0"."author_id", "b0"."publisher_id", "b0"."price" * 1.19 as "price_taxed", ' +
-      '"a1"."id" as "a1__id", "a1"."created_at" as "a1__created_at", "a1"."updated_at" as "a1__updated_at", "a1"."name" as "a1__name", "a1"."email" as "a1__email", "a1"."age" as "a1__age", "a1"."terms_accepted" as "a1__terms_accepted", "a1"."optional" as "a1__optional", "a1"."identities" as "a1__identities", "a1"."born" as "a1__born", "a1"."born_time" as "a1__born_time", "a1"."favourite_book_uuid_pk" as "a1__favourite_book_uuid_pk", "a1"."favourite_author_id" as "a1__favourite_author_id", "a1"."identity" as "a1__identity", ' +
-      '"b2"."uuid_pk" as "b2__uuid_pk", "b2"."created_at" as "b2__created_at", "b2"."isbn" as "b2__isbn", "b2"."title" as "b2__title", "b2"."price" as "b2__price", "b2"."price" * 1.19 as "b2__price_taxed", "b2"."double" as "b2__double", "b2"."meta" as "b2__meta", "b2"."author_id" as "b2__author_id", "b2"."publisher_id" as "b2__publisher_id", ' +
-      '"a3"."id" as "a3__id", "a3"."created_at" as "a3__created_at", "a3"."updated_at" as "a3__updated_at", "a3"."name" as "a3__name", "a3"."email" as "a3__email", "a3"."age" as "a3__age", "a3"."terms_accepted" as "a3__terms_accepted", "a3"."optional" as "a3__optional", "a3"."identities" as "a3__identities", "a3"."born" as "a3__born", "a3"."born_time" as "a3__born_time", "a3"."favourite_book_uuid_pk" as "a3__favourite_book_uuid_pk", "a3"."favourite_author_id" as "a3__favourite_author_id", "a3"."identity" as "a3__identity" ' +
+      '"a1"."id" "a1__id", "a1"."created_at" "a1__created_at", "a1"."updated_at" "a1__updated_at", "a1"."name" "a1__name", "a1"."email" "a1__email", "a1"."age" "a1__age", "a1"."terms_accepted" "a1__terms_accepted", "a1"."optional" "a1__optional", "a1"."identities" "a1__identities", "a1"."born" "a1__born", "a1"."born_time" "a1__born_time", "a1"."favourite_book_uuid_pk" "a1__favourite_book_uuid_pk", "a1"."favourite_author_id" "a1__favourite_author_id", "a1"."identity" "a1__identity", ' +
+      '"b2"."uuid_pk" "b2__uuid_pk", "b2"."created_at" "b2__created_at", "b2"."isbn" "b2__isbn", "b2"."title" "b2__title", "b2"."price" "b2__price", "b2"."price" * 1.19 as "b2__price_taxed", "b2"."double" "b2__double", "b2"."meta" as "b2__meta", "b2"."author_id" "b2__author_id", "b2"."publisher_id" "b2__publisher_id", ' +
+      '"a3"."id" "a3__id", "a3"."created_at" "a3__created_at", "a3"."updated_at" "a3__updated_at", "a3"."name" "a3__name", "a3"."email" "a3__email", "a3"."age" "a3__age", "a3"."terms_accepted" "a3__terms_accepted", "a3"."optional" "a3__optional", "a3"."identities" "a3__identities", "a3"."born" "a3__born", "a3"."born_time" "a3__born_time", "a3"."favourite_book_uuid_pk" "a3__favourite_book_uuid_pk", "a3"."favourite_author_id" "a3__favourite_author_id", "a3"."identity" "a3__identity" ' +
       'from "book2" "b0" ' +
-      'left join "author2" as "a1" on "b0"."author_id" = "a1"."id" ' +
+      'left join "author2" "a1" on "b0"."author_id" = "a1"."id" ' +
       'left join "book2" "b2" on "a1"."favourite_book_uuid_pk" = "b2"."uuid_pk" and "b2"."author_id" is not null ' +
-      'left join "author2" as "a3" on "b2"."author_id" = "a3"."id" ' +
+      'left join "author2" "a3" on "b2"."author_id" = "a3"."id" ' +
       'where "b0"."author_id" is not null and "a3"."name" = ?');
     expect(wrap(res4[0]).toObject()).toMatchObject({
       title: 'My Life on The Wall, part 1',

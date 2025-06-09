@@ -177,6 +177,13 @@ export abstract class Platform {
     return 'regexp';
   }
 
+  mapRegExpCondition(mappedKey: string, value: { $re: string; $flags?: string }): { sql: string; params: unknown[] } {
+    const operator = this.getRegExpOperator(value.$re, value.$flags);
+    const quotedKey = this.quoteIdentifier(mappedKey);
+
+    return { sql: `${quotedKey} ${operator} ?`, params: [value.$re] };
+  }
+
   getRegExpValue(val: RegExp): { $re: string; $flags?: string } {
     if (val.flags.includes('i')) {
       return { $re: `(?i)${val.source}` };

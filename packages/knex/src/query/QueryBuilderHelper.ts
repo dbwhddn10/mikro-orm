@@ -529,7 +529,6 @@ export class QueryBuilderHelper {
       return { sql: '', params };
     }
 
-
     // grouped condition for one field, e.g. `{ age: { $gte: 10, $lt: 50 } }`
     if (size > 1) {
       const rawField = RawQueryFragment.getKnownFragment(key);
@@ -610,6 +609,11 @@ export class QueryBuilderHelper {
       params.push(...params2);
     } else if (['$in', '$nin'].includes(op) && Array.isArray(value[op]) && value[op].length === 0) {
       parts.push(`1 = ${op === '$in' ? 0 : 1}`);
+    } else if (op === '$re') {
+      const mappedKey = this.mapper(key, type, value[op], null);
+      const processed = this.platform.mapRegExpCondition(mappedKey, value);
+      parts.push(processed.sql);
+      params.push(...processed.params);
     } else if (value[op] instanceof RawQueryFragment || value[op] instanceof NativeQueryBuilder) {
       const query = value[op] instanceof NativeQueryBuilder ? value[op].toRaw() : value[op];
       const mappedKey = this.mapper(key, type, query, null);

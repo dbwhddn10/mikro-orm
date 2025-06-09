@@ -89,15 +89,12 @@ describe('EntityManagerOracle', () => {
       baseDir: BASE_DIR,
       subscribers: [Test2Subscriber],
       autoJoinOneToOneOwner: false,
-      debug: true,
     });
     await orm.schema.refreshDatabase();
-    // await orm.driver.getConnection().loadFile(import.meta.dirname + '/oracle-schema.sql');
   });
   beforeEach(async () => orm.schema.clearDatabase());
   afterEach(() => expect(RawQueryFragment.checkCacheSize()).toBe(0));
   afterAll(async () => {
-    // await orm.schema.dropDatabase();
     await orm.close(true);
   });
 
@@ -141,10 +138,10 @@ describe('EntityManagerOracle', () => {
   });
 
   test('raw query with array param', async () => {
-    const q1 = orm.em.getPlatform().formatQuery(`select * from author2 where id in (?) and rownum <= ?`, [[1, 2, 3], 3]);
-    expect(q1).toBe('select * from author2 where id in (1, 2, 3) and rownum <= 3');
-    const q2 = orm.em.getPlatform().formatQuery(`select * from author2 where id in (?) and rownum <= ?`, [['1', '2', '3'], 3]);
-    expect(q2).toBe(`select * from author2 where id in ('1', '2', '3') and rownum <= 3`);
+    const q1 = orm.em.getPlatform().formatQuery(`select * from author2 where id in (?) fetch next ? rows`, [[1, 2, 3], 3]);
+    expect(q1).toBe('select * from author2 where id in (1, 2, 3) fetch next 3 rows');
+    const q2 = orm.em.getPlatform().formatQuery(`select * from author2 where id in (?) fetch next ? rows`, [['1', '2', '3'], 3]);
+    expect(q2).toBe(`select * from author2 where id in ('1', '2', '3') fetch next 3 rows`);
   });
 
   test.skip('should return postgre driver', async () => {
@@ -425,8 +422,8 @@ describe('EntityManagerOracle', () => {
     await em.commit();
 
     expect(mock.mock.calls[0][0]).toMatch(`begin`);
-    expect(mock.mock.calls[1][0]).toMatch(`select "b0"."uuid_pk", "b0"."created_at", "b0"."isbn", "b0"."title", "b0"."price", "b0"."double", "b0"."meta", "b0"."author_id", "b0"."publisher_id", "b0"."price" * 1.19 as "price_taxed" from "book2" "b0" where "b0"."author_id" is not null and "b0"."uuid_pk" = ? and rownum <= ?`);
-    expect(mock.mock.calls[2][0]).toMatch(`select "p0".* from "publisher2" "p0" where "p0"."id" = ? and rownum <= ? for update`);
+    expect(mock.mock.calls[1][0]).toMatch(`select "b0"."uuid_pk", "b0"."created_at", "b0"."isbn", "b0"."title", "b0"."price", "b0"."double", "b0"."meta", "b0"."author_id", "b0"."publisher_id", "b0"."price" * 1.19 as "price_taxed" from "book2" "b0" where "b0"."author_id" is not null and "b0"."uuid_pk" = ? fetch next ? rows`);
+    expect(mock.mock.calls[2][0]).toMatch(`select "p0".* from "publisher2" "p0" where "p0"."id" = ? fetch next ? rows only for update`);
     expect(mock.mock.calls[3][0]).toMatch(`select "t1".*, "p0"."test2_id" "fk__test2_id", "p0"."publisher2_id" "fk__publisher2_id" from "publisher2_tests" "p0" inner join "test2" "t1" on "p0"."test2_id" = "t1"."id" where "p0"."publisher2_id" in (?) order by "p0"."id" asc for update`);
     expect(mock.mock.calls[4][0]).toMatch(`savepoint "trx`);
     expect(mock.mock.calls[5][0]).toMatch(`release savepoint "trx`);
@@ -731,19 +728,19 @@ describe('EntityManagerOracle', () => {
 
     expect(mock.mock.calls).toHaveLength(5);
     expect(logSpy.mock.calls).toHaveLength(5);
-    expect(mock.mock.calls[0][0]).toMatch(`select "f0".*, (select 123) as "random" from "foo_bar2" "f0" where "f0"."id" = 1 and rownum <= 1`);
+    expect(mock.mock.calls[0][0]).toMatch(`select "f0".*, (select 123) as "random" from "foo_bar2" "f0" where "f0"."id" = 1 fetch next 1 rows`);
     expect(mock.mock.calls[0][0]).toMatch('(foo 123)');
     expect(logSpy.mock.calls[0][2]).toMatchObject({ id: em.id, label: 'foo 123', bar: 456, new: true });
-    expect(mock.mock.calls[1][0]).toMatch(`select "f0".*, (select 123) as "random" from "foo_bar2" "f0" where json_value("f0"."object_property", '$.myPropName.nestedProperty') in (123) and rownum <= 1`);
+    expect(mock.mock.calls[1][0]).toMatch(`select "f0".*, (select 123) as "random" from "foo_bar2" "f0" where json_value("f0"."object_property", '$.myPropName.nestedProperty') in (123) fetch next 1 rows`);
     expect(mock.mock.calls[1][0]).toMatch('(foo)');
     expect(logSpy.mock.calls[1][2]).toMatchObject({ id: em.id, label: 'foo', bar: 123 });
-    expect(mock.mock.calls[2][0]).toMatch(`select "f0".*, (select 123) as "random" from "foo_bar2" "f0" where json_value("f0"."object_property", '$.myPropName.somethingElse') is null and rownum <= 1`);
+    expect(mock.mock.calls[2][0]).toMatch(`select "f0".*, (select 123) as "random" from "foo_bar2" "f0" where json_value("f0"."object_property", '$.myPropName.somethingElse') is null fetch next 1 rows`);
     expect(mock.mock.calls[2][0]).toMatch('(foo)');
     expect(logSpy.mock.calls[2][2]).toMatchObject({ id: em.id, label: 'foo', bar: 123 });
-    expect(mock.mock.calls[3][0]).toMatch(`select "f0".*, (select 123) as "random" from "foo_bar2" "f0" where json_value("f0"."object_property", '$.myPropName.nestedProperty') in (123) and json_value("f0"."object_property", '$.myPropName.somethingElse') is null and rownum <= 1`);
+    expect(mock.mock.calls[3][0]).toMatch(`select "f0".*, (select 123) as "random" from "foo_bar2" "f0" where json_value("f0"."object_property", '$.myPropName.nestedProperty') in (123) and json_value("f0"."object_property", '$.myPropName.somethingElse') is null fetch next 1 rows`);
     expect(mock.mock.calls[3][0]).toMatch('(foo)');
     expect(logSpy.mock.calls[3][2]).toMatchObject({ id: em.id, label: 'foo', bar: 123 });
-    expect(mock.mock.calls[4][0]).toMatch(`select "f0".*, (select 123) as "random" from "foo_bar2" "f0" where json_value("f0"."object_property", '$.myPropName.nestedProperty') = 123 and json_value("f0"."object_property", '$.myPropName.somethingElse') is null and rownum <= 1`);
+    expect(mock.mock.calls[4][0]).toMatch(`select "f0".*, (select 123) as "random" from "foo_bar2" "f0" where json_value("f0"."object_property", '$.myPropName.nestedProperty') = 123 and json_value("f0"."object_property", '$.myPropName.somethingElse') is null fetch next 1 rows`);
     expect(mock.mock.calls[4][0]).toMatch('(foo)');
     expect(logSpy.mock.calls[4][2]).toMatchObject({ id: em.id, label: 'foo', bar: 123 });
   });
@@ -1128,19 +1125,19 @@ describe('EntityManagerOracle', () => {
 
     // autoJoinOneToOneOwner: false
     const b0 = await orm.em.findOneOrFail(FooBaz2, { id: baz.id });
-    expect(mock.mock.calls[0][0]).toMatch('select "f0".* from "foo_baz2" "f0" where "f0"."id" = ? and rownum <= ?');
+    expect(mock.mock.calls[0][0]).toMatch('select "f0".* from "foo_baz2" "f0" where "f0"."id" = ? fetch next ? rows');
     expect(b0.bar).toBeUndefined();
     orm.em.clear();
 
     const b1 = await orm.em.findOneOrFail(FooBaz2, { id: baz.id }, { populate: ['bar'] });
-    expect(mock.mock.calls[1][0]).toMatch('select "f0".*, "b1"."id" "b1__id", "b1"."name" "b1__name", "b1"."name with space" "b1__name with space", "b1"."baz_id" "b1__baz_id", "b1"."foo_bar_id" "b1__foo_bar_id", "b1"."version" "b1__version", "b1"."blob" "b1__blob", "b1"."blob2" "b1__blob2", "b1"."array" "b1__array", "b1"."object_property" as "b1__object_property", (select 123) as "b1__random" from "foo_baz2" "f0" left join "foo_bar2" "b1" on "f0"."id" = "b1"."baz_id" where "f0"."id" = ? and rownum <= ?');
+    expect(mock.mock.calls[1][0]).toMatch('select "f0".*, "b1"."id" "b1__id", "b1"."name" "b1__name", "b1"."name with space" "b1__name with space", "b1"."baz_id" "b1__baz_id", "b1"."foo_bar_id" "b1__foo_bar_id", "b1"."version" "b1__version", "b1"."blob" "b1__blob", "b1"."blob2" "b1__blob2", "b1"."array" "b1__array", "b1"."object_property" as "b1__object_property", (select 123) as "b1__random" from "foo_baz2" "f0" left join "foo_bar2" "b1" on "f0"."id" = "b1"."baz_id" where "f0"."id" = ? fetch next ? rows');
     expect(b1.bar).toBeInstanceOf(FooBar2);
     expect(b1.bar!.id).toBe(bar.id);
     expect(wrap(b1).toJSON()).toMatchObject({ bar: { id: bar.id, baz: baz.id, name: 'bar' } });
     orm.em.clear();
 
     const b2 = await orm.em.findOneOrFail(FooBaz2, { bar: bar.id }, { populate: ['bar'] });
-    expect(mock.mock.calls[2][0]).toMatch('select "f0".*, "b1"."id" "b1__id", "b1"."name" "b1__name", "b1"."name with space" "b1__name with space", "b1"."baz_id" "b1__baz_id", "b1"."foo_bar_id" "b1__foo_bar_id", "b1"."version" "b1__version", "b1"."blob" "b1__blob", "b1"."blob2" "b1__blob2", "b1"."array" "b1__array", "b1"."object_property" as "b1__object_property", (select 123) as "b1__random" from "foo_baz2" "f0" left join "foo_bar2" "b1" on "f0"."id" = "b1"."baz_id" left join "foo_bar2" "f2" on "f0"."id" = "f2"."baz_id" where "f2"."id" = ? and rownum <= ?');
+    expect(mock.mock.calls[2][0]).toMatch('select "f0".*, "b1"."id" "b1__id", "b1"."name" "b1__name", "b1"."name with space" "b1__name with space", "b1"."baz_id" "b1__baz_id", "b1"."foo_bar_id" "b1__foo_bar_id", "b1"."version" "b1__version", "b1"."blob" "b1__blob", "b1"."blob2" "b1__blob2", "b1"."array" "b1__array", "b1"."object_property" as "b1__object_property", (select 123) as "b1__random" from "foo_baz2" "f0" left join "foo_bar2" "b1" on "f0"."id" = "b1"."baz_id" left join "foo_bar2" "f2" on "f0"."id" = "f2"."baz_id" where "f2"."id" = ? fetch next ? rows');
     expect(mock.mock.calls).toHaveLength(3);
     expect(b2.bar).toBeInstanceOf(FooBar2);
     expect(b2.bar!.id).toBe(bar.id);
@@ -1459,7 +1456,7 @@ describe('EntityManagerOracle', () => {
       filters: false,
     });
     expect(mock).toHaveBeenCalledTimes(2);
-    expect(mock.mock.calls[0][0]).toMatch(`select "b0".* from "book_tag2" "b0" where "b0"."id" = '1' and rownum <= 1`);
+    expect(mock.mock.calls[0][0]).toMatch(`select "b0".* from "book_tag2" "b0" where "b0"."id" = '1' fetch next 1 rows`);
     expect(mock.mock.calls[1][0]).toMatch('select "b0"."book_tag2_id" "fk__book_tag2_id", "b0"."book2_uuid_pk" "fk__book2_uuid_pk" ' +
       'from "book2_tags" "b0" ' +
       `where "b0"."book_tag2_id" in ('1') ` +
@@ -1503,7 +1500,7 @@ describe('EntityManagerOracle', () => {
       strategy: 'select-in',
     });
     expect(mock).toHaveBeenCalledTimes(2);
-    expect(mock.mock.calls[0][0]).toMatch('select "a0".* from "author2" "a0" where "a0"."id" = 1 and rownum <= 1');
+    expect(mock.mock.calls[0][0]).toMatch('select "a0".* from "author2" "a0" where "a0"."id" = 1 fetch next 1 rows');
     expect(mock.mock.calls[1][0]).toMatch('select "b0"."uuid_pk", "b0"."author_id" from "book2" "b0" where "b0"."author_id" is not null and "b0"."author_id" in (1) order by "b0"."title" asc');
     expect(a2.books.isInitialized()).toBe(true);
     expect(a2.books.isInitialized(true)).toBe(false);
@@ -1713,7 +1710,7 @@ describe('EntityManagerOracle', () => {
     });
     expect(res).toHaveLength(1);
     expect(res[0].books.length).toBe(3);
-    expect(mock.mock.calls[0][0]).toMatch('select "a0".*, "f1"."uuid_pk" "f1__uuid_pk" from "author2" "a0" left join "book2" "f1" on "a0"."favourite_book_uuid_pk" = "f1"."uuid_pk" and "f1"."author_id" is not null left join "book2" "b2" on "a0"."id" = "b2"."author_id" and "b2"."author_id" is not null where "b2"."title" in (?, ?)');
+    expect(mock.mock.calls[0][0]).toMatch('select "a0".* from "author2" "a0" left join "book2" "b1" on "a0"."id" = "b1"."author_id" and "b1"."author_id" is not null where "b1"."title" in (?, ?)');
     expect(mock.mock.calls[1][0]).toMatch('select "b0".*, "b0"."price" * 1.19 as "price_taxed" from "book2" "b0" where "b0"."author_id" is not null and "b0"."author_id" in (?) order by "b0"."title" asc');
   });
 
@@ -1837,7 +1834,7 @@ describe('EntityManagerOracle', () => {
     expect(mock.mock.calls[2][0]).toMatch('insert into "book2" ("uuid_pk", "created_at", "title", "author_id") values (?, ?, ?, ?), (?, ?, ?, ?), (?, ?, ?, ?)');
     expect(mock.mock.calls[3][0]).toMatch('update "author2" set "favourite_author_id" = ?, "updated_at" = ? where "id" = ?');
     expect(mock.mock.calls[4][0]).toMatch('commit');
-    expect(mock.mock.calls[5][0]).toMatch('select "a0".*, "f1"."uuid_pk" "f1__uuid_pk" from "author2" "a0" left join "book2" "f1" on "a0"."favourite_book_uuid_pk" = "f1"."uuid_pk" and "f1"."author_id" is not null where "a0"."id" = ? and rownum <= ?');
+    expect(mock.mock.calls[5][0]).toMatch('select "a0".*, "f1"."uuid_pk" "f1__uuid_pk" from "author2" "a0" left join "book2" "f1" on "a0"."favourite_book_uuid_pk" = "f1"."uuid_pk" and "f1"."author_id" is not null where "a0"."id" = ? fetch next ? rows');
   });
 
   test('allow assigning PK to undefined/null', async () => {
@@ -2215,8 +2212,7 @@ describe('EntityManagerOracle', () => {
     expect(b1.blob).toBeInstanceOf(Buffer);
     expect(b1.blob2).toEqual(new Uint8Array([1, 2, 3, 4, 5]));
     expect(b1.blob2).toBeInstanceOf(Uint8Array);
-    expect(b1.array).toEqual([]);
-    expect(b1.array).toBeInstanceOf(Array);
+    expect(b1.array).toEqual(null); // empty array gets serialized to empty string, which is null in oracle
     expect(b1.objectProperty).toEqual({ foo: `bar 'lol' baz "foo"`, bar: 3 });
     expect(b1.objectProperty).toBeInstanceOf(Object);
     expect(b1.objectProperty!.bar).toBe(3);

@@ -62,7 +62,6 @@ export class OracleNativeQueryBuilder extends NativeQueryBuilder {
     }
 
     this.addOnConflictClause();
-    // console.log('compile', this.type, this.options);
 
     if (this.options.returning) {
       const fields = this.options.returning.map(field => this.quote(Array.isArray(field) ? field[0] : field));
@@ -249,17 +248,6 @@ export class OracleNativeQueryBuilder extends NativeQueryBuilder {
       this.params.push(...this.options.where.params);
     }
 
-    if (this.options.limit != null && this.options.offset == null) {
-      if (!this.options.where?.sql.trim()) {
-        this.parts.push('where');
-      } else {
-        this.parts.push('and');
-      }
-
-      this.parts.push('rownum <= ?');
-      this.params.push(this.options.limit);
-    }
-
     if (this.options.groupBy) {
       const fields = this.options.groupBy.map(field => this.quote(field));
       this.parts.push(`group by ${fields.join(', ')}`);
@@ -275,18 +263,13 @@ export class OracleNativeQueryBuilder extends NativeQueryBuilder {
     }
 
     if (this.options.offset != null) {
-      /* v8 ignore next 3 */
-      if (!this.options.orderBy) {
-        throw new Error('Order by clause is required for pagination');
-      }
-
       this.parts.push(`offset ? rows`);
       this.params.push(this.options.offset);
+    }
 
-      if (this.options.limit != null) {
-        this.parts.push(`fetch next ? rows only`);
-        this.params.push(this.options.limit);
-      }
+    if (this.options.limit != null) {
+      this.parts.push(`fetch next ? rows only`);
+      this.params.push(this.options.limit);
     }
   }
 

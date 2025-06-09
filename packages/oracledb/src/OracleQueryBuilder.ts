@@ -21,7 +21,7 @@ export class OracleQueryBuilder<
     for (const row of Utils.asArray(data)) {
       if (this.mainAlias.metadata && Object.keys(row).length === 0) {
         // ensure that we insert at least one column, otherwise Oracle will throw an error
-        row[this.mainAlias.metadata.primaryKeys[0] as keyof typeof row] = null!;
+        row[this.mainAlias.metadata.primaryKeys[0] as keyof typeof row] = raw('default');
       }
     }
 

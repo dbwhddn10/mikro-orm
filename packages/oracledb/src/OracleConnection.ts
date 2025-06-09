@@ -40,6 +40,12 @@ export class OracleConnection extends AbstractSqlConnection {
           };
         }
 
+        if (metaData.dbType === oracledb.DB_TYPE_BLOB) {
+          return {
+            type: oracledb.BUFFER,
+          };
+        }
+
         return undefined;
       },
     };

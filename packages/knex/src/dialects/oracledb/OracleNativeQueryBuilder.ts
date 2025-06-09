@@ -237,7 +237,6 @@ export class OracleNativeQueryBuilder extends NativeQueryBuilder {
 
     this.addHintComment();
     this.parts.push(`${this.getFields()} from ${this.getTableName()}`);
-    this.addLockClause();
 
     if (this.options.joins) {
       for (const join of this.options.joins) {

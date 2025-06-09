@@ -3,6 +3,7 @@ import {
   type Dictionary,
   type EntityMetadata,
   isRaw,
+  type LockMode,
   raw,
   type RequiredEntityData,
   Utils,
@@ -25,6 +26,19 @@ export class OracleQueryBuilder<
     }
 
     return this.init(QueryType.INSERT, data) as InsertQueryBuilder<Entity>;
+  }
+
+  override setLockMode(mode?: LockMode, tables?: string[]): this {
+    if (tables) {
+      for (let i = 0; i < tables.length; i++) {
+        if (!tables[i].includes('.')) {
+          const meta = this._aliases[tables[i]].metadata!;
+          tables[i] += '.' + meta.getPrimaryProp().fieldNames[0];
+        }
+      }
+    }
+
+    return super.setLockMode(mode, tables);
   }
 
   protected override processReturningStatement(qb: NativeQueryBuilder, meta?: EntityMetadata, data?: Dictionary, returning?: Field<any>[]): void {

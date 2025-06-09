@@ -174,7 +174,6 @@ export class OracleNativeQueryBuilder extends NativeQueryBuilder {
     const clause = this.options.onConflict!;
     const dataAsArray = Utils.asArray(this.options.data);
     const keys = Object.keys(dataAsArray[0]);
-    const values = keys.map(() => '?');
     const parts = [];
 
     for (const data of dataAsArray) {
@@ -182,11 +181,11 @@ export class OracleNativeQueryBuilder extends NativeQueryBuilder {
         this.params.push(data![key]);
       }
 
-      parts.push(`(${values.join(', ')})`);
+      parts.push(keys.map(k => `? as ${this.quote(k)}`).join(', '));
     }
 
     this.parts.push(`merge into ${this.getTableName()}`);
-    this.parts.push(`using (values ${parts.join(', ')}) as tsource(${keys.map(key => this.quote(key)).join(', ')})`);
+    this.parts.push(`using (select ${parts.join(', ')} from dual) tsource`);
 
     if (clause.fields instanceof RawQueryFragment) {
       this.parts.push(clause.fields.sql);
@@ -196,7 +195,7 @@ export class OracleNativeQueryBuilder extends NativeQueryBuilder {
         const col = this.quote(field);
         return `${this.getTableName()}.${col} = tsource.${col}`;
       });
-      this.parts.push(`on ${fields.join(' and ')}`);
+      this.parts.push(`on (${fields.join(' and ')})`);
     }
 
     const sourceColumns = keys.map(field => `tsource.${this.quote(field)}`).join(', ');

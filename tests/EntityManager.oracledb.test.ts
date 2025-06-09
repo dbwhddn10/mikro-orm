@@ -7,6 +7,7 @@ import {
   EventSubscriber,
   FilterQuery,
   FlushEventArgs,
+  ForeignKeyConstraintViolationException,
   RawQueryFragment,
 } from '@mikro-orm/core';
 import {
@@ -88,7 +89,7 @@ describe('EntityManagerOracle', () => {
       baseDir: BASE_DIR,
       subscribers: [Test2Subscriber],
       autoJoinOneToOneOwner: false,
-      // debug: true,
+      debug: true,
     });
     await orm.schema.refreshDatabase();
     // await orm.driver.getConnection().loadFile(import.meta.dirname + '/oracle-schema.sql');
@@ -409,7 +410,7 @@ describe('EntityManagerOracle', () => {
     await em.begin();
 
     const book2 = await em.findOneOrFail(Book2, book.uuid);
-    const publisher2 = await book2.publisher!.loadOrFail({ populate: ['tests'], lockMode: LockMode.PESSIMISTIC_WRITE });
+    const publisher2 = await book2.publisher!.loadOrFail({ populate: ['tests'], strategy: 'select-in', lockMode: LockMode.PESSIMISTIC_WRITE });
 
     await em.transactional(async () => {
       //
@@ -426,9 +427,9 @@ describe('EntityManagerOracle', () => {
     expect(mock.mock.calls[0][0]).toMatch(`begin`);
     expect(mock.mock.calls[1][0]).toMatch(`select "b0"."uuid_pk", "b0"."created_at", "b0"."isbn", "b0"."title", "b0"."price", "b0"."double", "b0"."meta", "b0"."author_id", "b0"."publisher_id", "b0"."price" * 1.19 as "price_taxed" from "book2" "b0" where "b0"."author_id" is not null and "b0"."uuid_pk" = ? and rownum <= ?`);
     expect(mock.mock.calls[2][0]).toMatch(`select "p0".* from "publisher2" "p0" where "p0"."id" = ? and rownum <= ? for update`);
-    expect(mock.mock.calls[3][0]).toMatch(`select "t1".*, "p0"."test2_id" as "fk__test2_id", "p0"."publisher2_id" as "fk__publisher2_id" from "publisher2_tests" "p0" inner join "test2" "t1" on "p0"."test2_id" = "t1"."id" where "p0"."publisher2_id" in (?) order by "p0"."id" asc for update`);
-    expect(mock.mock.calls[4][0]).toMatch(`savepoint trx`);
-    expect(mock.mock.calls[5][0]).toMatch(`release savepoint trx`);
+    expect(mock.mock.calls[3][0]).toMatch(`select "t1".*, "p0"."test2_id" "fk__test2_id", "p0"."publisher2_id" "fk__publisher2_id" from "publisher2_tests" "p0" inner join "test2" "t1" on "p0"."test2_id" = "t1"."id" where "p0"."publisher2_id" in (?) order by "p0"."id" asc for update`);
+    expect(mock.mock.calls[4][0]).toMatch(`savepoint "trx`);
+    expect(mock.mock.calls[5][0]).toMatch(`release savepoint "trx`);
     expect(mock.mock.calls[6][0]).toMatch(`select "b0"."uuid_pk", "b0"."created_at", "b0"."isbn", "b0"."title", "b0"."price", "b0"."double", "b0"."meta", "b0"."author_id", "b0"."publisher_id", "b0"."price" * 1.19 as "price_taxed" from "book2" "b0" where "b0"."author_id" is not null and "b0"."publisher_id" in (?) for update`);
     expect(mock.mock.calls[7][0]).toMatch(`commit`);
   });
@@ -974,7 +975,7 @@ describe('EntityManagerOracle', () => {
     expect(mock.mock.calls[0][0]).toMatch('begin');
     expect(mock.mock.calls[1][0]).toMatch(`select "b0"."uuid_pk", "b0"."created_at", "b0"."isbn", "b0"."title", "b0"."price", "b0"."double", "b0"."meta", "b0"."author_id", "b0"."publisher_id", "b0"."price" * 1.19 as "price_taxed" from "book2" "b0" where "b0"."author_id" is not null for update skip locked`);
     expect(mock.mock.calls[2][0]).toMatch(`select "a0".* from "author2" "a0" where "a0"."id" in (?) and "a0"."id" is not null for update skip locked`);
-    expect(mock.mock.calls[3][0]).toMatch(`select "b1".*, "b0"."book_tag2_id" as "fk__book_tag2_id", "b0"."book2_uuid_pk" as "fk__book2_uuid_pk" from "book2_tags" "b0" inner join "book_tag2" "b1" on "b0"."book_tag2_id" = "b1"."id" where "b0"."book2_uuid_pk" in (?, ?, ?) order by "b0"."order" asc for update skip locked`);
+    expect(mock.mock.calls[3][0]).toMatch(`select "b1".*, "b0"."book_tag2_id" "fk__book_tag2_id", "b0"."book2_uuid_pk" "fk__book2_uuid_pk" from "book2_tags" "b0" inner join "book_tag2" "b1" on "b0"."book_tag2_id" = "b1"."id" where "b0"."book2_uuid_pk" in (?, ?, ?) order by "b0"."order" asc for update skip locked`);
     expect(mock.mock.calls[4][0]).toMatch('commit');
   });
 
@@ -1708,6 +1709,7 @@ describe('EntityManagerOracle', () => {
     const res = await orm.em.findAll(Author2, {
       where: { books: { title: { $in: ['b1', 'b2'] } } },
       populate: ['books.perex'],
+      strategy: 'select-in',
     });
     expect(res).toHaveLength(1);
     expect(res[0].books.length).toBe(3);
@@ -1972,7 +1974,7 @@ describe('EntityManagerOracle', () => {
     expect(mock.mock.calls.length).toBe(1);
     expect(mock.mock.calls[0][0]).toMatch('select "b0".*, "b0"."price" * 1.19 as "price_taxed" ' +
       'from "book2" "b0" ' +
-      'left join "author2" as "a1" on "b0"."author_id" = "a1"."id" ' +
+      'left join "author2" "a1" on "b0"."author_id" = "a1"."id" ' +
       'where "b0"."author_id" is not null and "a1"."name" = ?');
 
     orm.em.clear();
@@ -1982,9 +1984,9 @@ describe('EntityManagerOracle', () => {
     expect(mock.mock.calls.length).toBe(1);
     expect(mock.mock.calls[0][0]).toMatch('select "b0".*, "b0"."price" * 1.19 as "price_taxed" ' +
       'from "book2" "b0" ' +
-      'left join "author2" as "a1" on "b0"."author_id" = "a1"."id" ' +
+      'left join "author2" "a1" on "b0"."author_id" = "a1"."id" ' +
       'left join "book2" "b2" on "a1"."favourite_book_uuid_pk" = "b2"."uuid_pk" and "b2"."author_id" is not null ' +
-      'left join "author2" as "a3" on "b2"."author_id" = "a3"."id" ' +
+      'left join "author2" "a3" on "b2"."author_id" = "a3"."id" ' +
       'where "b0"."author_id" is not null and "a3"."name" = ?');
 
     orm.em.clear();
@@ -1994,7 +1996,7 @@ describe('EntityManagerOracle', () => {
     expect(mock.mock.calls.length).toBe(1);
     expect(mock.mock.calls[0][0]).toMatch('select "b0".*, "b0"."price" * 1.19 as "price_taxed" ' +
       'from "book2" "b0" ' +
-      'left join "author2" as "a1" on "b0"."author_id" = "a1"."id" ' +
+      'left join "author2" "a1" on "b0"."author_id" = "a1"."id" ' +
       'where "b0"."author_id" is not null and "a1"."favourite_book_uuid_pk" = ?');
 
     orm.em.clear();
@@ -2004,9 +2006,9 @@ describe('EntityManagerOracle', () => {
     expect(mock.mock.calls.length).toBe(1);
     expect(mock.mock.calls[0][0]).toMatch('select "b0".*, "b0"."price" * 1.19 as "price_taxed" ' +
       'from "book2" "b0" ' +
-      'left join "author2" as "a1" on "b0"."author_id" = "a1"."id" ' +
+      'left join "author2" "a1" on "b0"."author_id" = "a1"."id" ' +
       'left join "book2" "b2" on "a1"."favourite_book_uuid_pk" = "b2"."uuid_pk" and "b2"."author_id" is not null ' +
-      'left join "author2" as "a3" on "b2"."author_id" = "a3"."id" ' +
+      'left join "author2" "a3" on "b2"."author_id" = "a3"."id" ' +
       'where "b0"."author_id" is not null and "a3"."name" = ?');
   });
 
@@ -2098,7 +2100,7 @@ describe('EntityManagerOracle', () => {
     await orm.em.persistAndFlush(author);
     orm.em.clear();
 
-    const res = await orm.em.execute<{ created_at: string }[]>(`select to_char(created_at at time zone 'UTC', 'YYYY-MM-DD HH24:MI:SS.US') as created_at from author2 where id = ${author.id}`);
+    const res = await orm.em.execute<{ created_at: string }[]>(`select to_char("created_at" at time zone 'UTC', 'YYYY-MM-DD HH24:MI:SS.FF6') as "created_at" from "author2" where "id" = ${author.id}`);
     expect(res[0].created_at).toBe('2000-01-01 00:00:00.000000');
     const a = await orm.em.findOneOrFail(Author2, author.id);
     expect(+a.createdAt!).toBe(+author.createdAt);
@@ -2191,8 +2193,8 @@ describe('EntityManagerOracle', () => {
       'from (select "a0"."id" ' +
       'from "author2" "a0" ' +
       'left join "book2" "b1" on "a0"."id" = "b1"."author_id" ' +
-      'where "b1"."title" like ? group by "a0"."id" order by min("a0"."name") asc, min("b1"."title") asc and rownum <= ? offset ?' +
-      ') as "a0"' +
+      'where "b1"."title" like ? group by "a0"."id" order by min("a0"."name") asc, min("b1"."title") asc offset ? rows fetch next ? rows only' +
+      ') "a0"' +
       ') order by "a0"."name" asc, "b1"."title" asc');
   });
 
@@ -2260,9 +2262,8 @@ describe('EntityManagerOracle', () => {
   test('exceptions', async () => {
     const driver = orm.em.getDriver();
     await driver.nativeInsert(Author2.name, { name: 'author', email: 'email' });
-    // FIXME upsert not working yet
-    // await expect(orm.em.upsert(Author2, { name: 'author', email: 'email', favouriteAuthor: 123 })).rejects.toThrow(ForeignKeyConstraintViolationException);
-    // await expect(orm.em.upsertMany(Author2, [{ name: 'author', email: 'email', favouriteAuthor: 123 }])).rejects.toThrow(ForeignKeyConstraintViolationException);
+    await expect(orm.em.upsert(Author2, { name: 'author', email: 'email', favouriteAuthor: 123 })).rejects.toThrow(ForeignKeyConstraintViolationException);
+    await expect(orm.em.upsertMany(Author2, [{ name: 'author', email: 'email', favouriteAuthor: 123 }])).rejects.toThrow(ForeignKeyConstraintViolationException);
     await expect(driver.nativeInsert(Author2.name, { name: 'author', email: 'email' })).rejects.toThrow(UniqueConstraintViolationException);
     await expect(driver.nativeInsert(Author2.name, {})).rejects.toThrow(NotNullConstraintViolationException);
     await expect(driver.nativeInsert('not_existing', { foo: 'bar' })).rejects.toThrow(TableNotFoundException);

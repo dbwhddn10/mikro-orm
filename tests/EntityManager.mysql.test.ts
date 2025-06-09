@@ -457,9 +457,9 @@ describe('EntityManagerMySql', () => {
     await expect(transaction).resolves.toBeUndefined();
     expect(mock.mock.calls.length).toBe(6);
     expect(mock.mock.calls[0][0]).toMatch('begin');
-    expect(mock.mock.calls[1][0]).toMatch('savepoint trx');
+    expect(mock.mock.calls[1][0]).toMatch('savepoint `trx');
     expect(mock.mock.calls[2][0]).toMatch('insert into `author2` (`created_at`, `updated_at`, `name`, `email`, `terms_accepted`) values (?, ?, ?, ?, ?)');
-    expect(mock.mock.calls[3][0]).toMatch('rollback to savepoint trx');
+    expect(mock.mock.calls[3][0]).toMatch('rollback to savepoint `trx');
     expect(mock.mock.calls[4][0]).toMatch('insert into `author2` (`created_at`, `updated_at`, `name`, `email`, `terms_accepted`) values (?, ?, ?, ?, ?)');
     expect(mock.mock.calls[5][0]).toMatch('commit');
     await expect(orm.em.findOne(Author2, { name: 'God Persisted!' })).resolves.not.toBeNull();
@@ -499,9 +499,9 @@ describe('EntityManagerMySql', () => {
     expect(mock.mock.calls[1][0]).toMatch('select `b0`.`uuid_pk`, `b0`.`created_at`, `b0`.`isbn`, `b0`.`title`, `b0`.`price`, `b0`.`double`, `b0`.`meta`, `b0`.`author_id`, `b0`.`publisher_id`, `b0`.`price` * 1.19 as `price_taxed`, `t1`.`id` as `t1__id` from `book2` as `b0` left join `test2` as `t1` on `b0`.`uuid_pk` = `t1`.`book_uuid_pk` where `b0`.`author_id` is not null and `b0`.`uuid_pk` = ? limit ?');
     expect(mock.mock.calls[2][0]).toMatch('select `p0`.*, `t1`.`id` as `t1__id`, `t1`.`name` as `t1__name`, `t1`.`book_uuid_pk` as `t1__book_uuid_pk`, `t1`.`parent_id` as `t1__parent_id`, `t1`.`version` as `t1__version` from `publisher2` as `p0` left join `publisher2_tests` as `p2` on `p0`.`id` = `p2`.`publisher2_id` left join `test2` as `t1` on `p2`.`test2_id` = `t1`.`id` where `p0`.`id` = ? order by `p2`.`id` asc for update');
     expect(mock.mock.calls[3][0]).toMatch('select `t1`.*, `p0`.`test2_id` as `fk__test2_id`, `p0`.`publisher2_id` as `fk__publisher2_id` from `publisher2_tests` as `p0` inner join `test2` as `t1` on `p0`.`test2_id` = `t1`.`id` where `p0`.`publisher2_id` in (?) order by `p0`.`id` asc for update');
-    expect(mock.mock.calls[4][0]).toMatch('savepoint trx');
+    expect(mock.mock.calls[4][0]).toMatch('savepoint `trx');
     expect(mock.mock.calls[5][0]).toMatch('select 123');
-    expect(mock.mock.calls[6][0]).toMatch('release savepoint trx');
+    expect(mock.mock.calls[6][0]).toMatch('release savepoint `trx');
     expect(mock.mock.calls[7][0]).toMatch('select `b0`.`uuid_pk`, `b0`.`created_at`, `b0`.`isbn`, `b0`.`title`, `b0`.`price`, `b0`.`double`, `b0`.`meta`, `b0`.`author_id`, `b0`.`publisher_id`, `b0`.`price` * 1.19 as `price_taxed`, `t1`.`id` as `t1__id` from `book2` as `b0` left join `test2` as `t1` on `b0`.`uuid_pk` = `t1`.`book_uuid_pk` where `b0`.`author_id` is not null and `b0`.`publisher_id` in (?) for update');
     expect(mock.mock.calls[8][0]).toMatch('commit');
   });

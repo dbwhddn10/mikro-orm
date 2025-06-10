@@ -115,12 +115,12 @@ export class OracleNativeQueryBuilder extends NativeQueryBuilder {
       const using = this.options.returning!.map(field => {
         const name = Array.isArray(field) ? field[0] : field;
         const type = Array.isArray(field) ? field[1] as string : 'string';
-        outBindings[`${name}__${i}`] = {
+        outBindings[`out_${name}__${i}`] = {
           dir: mapToOracleType('out'),
           type: mapToOracleType(type),
         };
 
-        return `out :${name}__${i}`;
+        return `out :out_${name}__${i}`;
       });
       block += ` execute immediate '${formatted}' using ${using.join(', ')};\n`;
       block2 += ` execute immediate '${sql}' using ${using.join(', ')};\n`;

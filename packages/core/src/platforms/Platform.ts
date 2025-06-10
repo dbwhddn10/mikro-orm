@@ -3,7 +3,20 @@ import { clone } from '../utils/clone.js';
 import { EntityRepository } from '../entity/EntityRepository.js';
 import { type NamingStrategy } from '../naming-strategy/NamingStrategy.js';
 import { UnderscoreNamingStrategy } from '../naming-strategy/UnderscoreNamingStrategy.js';
-import type { Constructor, EntityProperty, IPrimaryKey, ISchemaGenerator, PopulateOptions, Primary, EntityMetadata, SimpleColumnMeta } from '../typings.js';
+import type {
+  Constructor,
+  EntityProperty,
+  IPrimaryKey,
+  ISchemaGenerator,
+  PopulateOptions,
+  Primary,
+  EntityMetadata,
+  SimpleColumnMeta,
+  FilterQuery,
+  EntityValue,
+  EntityKey,
+  FilterKey,
+} from '../typings.js';
 import { ExceptionConverter } from './ExceptionConverter.js';
 import type { EntityManager } from '../EntityManager.js';
 import type { Configuration } from '../utils/Configuration.js';
@@ -378,6 +391,40 @@ export abstract class Platform {
   getSearchJsonPropertyKey(path: string[], type: string, aliased: boolean, value?: unknown): string {
     return path.join('.');
   }
+
+  processJsonCondition<T extends object>(o: FilterQuery<T>, value: EntityValue<T>, path: EntityKey<T>[], alias: boolean) {
+    if (Utils.isPlainObject<T>(value) && !Object.keys(value).some(k => Utils.isOperator(k))) {
+      Utils.keys(value).forEach(k => {
+        this.processJsonCondition<T>(o, value[k] as EntityValue<T>, [...path, k as EntityKey<T>], alias);
+      });
+
+      return o;
+    }
+
+    if (path.length === 1) {
+      o[path[0] as FilterKey<T>] = value as any;
+      return o;
+    }
+
+    const type = this.getJsonValueType(value);
+    const k = this.getSearchJsonPropertyKey(path, type, alias, value) as FilterKey<T>;
+    o[k] = value as any;
+
+    return o;
+  }
+
+  protected getJsonValueType(value: unknown): string {
+    if (Array.isArray(value)) {
+      return typeof value[0];
+    }
+
+    if (Utils.isPlainObject(value) && Object.keys(value).every(k => Utils.isOperator(k))) {
+      return this.getJsonValueType(Object.values(value)[0]);
+    }
+
+    return typeof value;
+  }
+
 
   /* v8 ignore next 3 */
   getJsonIndexDefinition(index: { columnNames: string[] }): string[] {

@@ -1,18 +1,22 @@
 import {
   AbstractSqlPlatform,
+  ALIAS_REPLACEMENT,
   type Dictionary,
-  type IDatabaseDriver,
+  DoubleType,
+  type EntityKey,
   type EntityManager,
+  type EntityValue,
+  type FilterKey,
+  type FilterQuery,
+  FloatType,
+  type IDatabaseDriver,
+  type IsolationLevel,
   type MikroORM,
+  OracleNativeQueryBuilder,
+  QueryOrder,
   raw,
   Type,
-  ALIAS_REPLACEMENT,
-  DoubleType,
-  FloatType,
-  QueryOrder,
-  OracleNativeQueryBuilder,
   Utils,
-  type IsolationLevel,
 } from '@mikro-orm/knex';
 import oracledb from 'oracledb';
 import { OracleSchemaHelper } from './OracleSchemaHelper.js';
@@ -83,7 +87,7 @@ export class OraclePlatform extends AbstractSqlPlatform {
   }
 
   override convertsJsonAutomatically(): boolean {
-    return false;
+    return true;
   }
 
   override indexForeignKeys() {
@@ -245,18 +249,35 @@ export class OraclePlatform extends AbstractSqlPlatform {
     const [a, ...b] = path;
     /* v8 ignore next */
     const root = this.quoteIdentifier(aliased ? `${ALIAS_REPLACEMENT}.${a}` : a);
-    const types = {
-      // boolean: 'bit',
-    } as Dictionary;
-    const cast = (key: string) => raw(type in types ? `cast(${key} as ${types[type]})` : key);
-    const quoteKey = (key: string) => key.match(/^[a-z]\w*$/i) ? key : `"${key}"`;
 
-    /* v8 ignore next 3 */
-    if (path.length === 0) {
-      return cast(`json_value(${root}, '$.${b.map(quoteKey).join('.')}')`);
+    if (b.length === 0) {
+      return raw(`json_equal(${root}, json(?))`, [value]);
     }
 
-    return cast(`json_value(${root}, '$.${b.map(quoteKey).join('.')}')`);
+    const quoteKey = (key: string) => key.match(/^[a-z]\w*$/i) ? key : `"${key}"`;
+
+    return raw(`json_value(${root}, '$.${b.map(quoteKey).join('.')}')`);
+  }
+
+  override processJsonCondition<T extends object>(o: FilterQuery<T>, value: EntityValue<T>, path: EntityKey<T>[], alias: boolean) {
+    if (Utils.isPlainObject<Dictionary>(value) && !Object.keys(value).some(k => Utils.isOperator(k))) {
+      Utils.keys(value).forEach(k => {
+        this.processJsonCondition<T>(o, value[k as EntityKey] as EntityValue<T>, [...path, k as EntityKey<T>], alias);
+      });
+
+      return o;
+    }
+
+    if (Utils.isPlainObject<Dictionary>(value) && Object.keys(value)[0] === '$eq') {
+      value = value.$eq;
+    }
+
+    const type = this.getJsonValueType(value);
+    const k = this.getSearchJsonPropertyKey(path, type, alias, value) as FilterKey<T>;
+    // console.log(2, path, value, k, type);
+    o[k] = path.length > 1 ? value as any : [];
+
+    return o;
   }
 
   override usesEnumCheckConstraints(): boolean {

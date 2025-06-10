@@ -178,7 +178,7 @@ export class OracleConnection extends AbstractSqlConnection {
       for (const key of keys) {
         const [k, i] = key.split('__');
         rows[+i] ??= {};
-        rows[+i][k] = res.outBinds[key];
+        rows[+i][k.replace(/^out_/, '')] = res.outBinds[key];
       }
 
       res.rows = rows;

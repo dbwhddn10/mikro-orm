@@ -82,16 +82,6 @@ export class OraclePlatform extends AbstractSqlPlatform {
     return true;
   }
 
-  // FIXME
-  // override convertDateToJSValue(value: string | Date): string {
-  //   /* v8 ignore next 3 */
-  //   if (typeof value === 'string') {
-  //     return value;
-  //   }
-  //
-  //   return SqlString.dateToString(value.toISOString(), this.timezone ?? 'local').substring(1, 11);
-  // }
-
   override convertsJsonAutomatically(): boolean {
     return false;
   }
@@ -230,15 +220,6 @@ export class OraclePlatform extends AbstractSqlPlatform {
     }
 
     const normalizedType = this.extractSimpleType(type);
-
-    // if (normalizedType !== 'uuid' && ['string', 'nvarchar'].includes(normalizedType)) {
-    //   return Type.getType(UnicodeStringType);
-    // }
-    //
-    // if (['character', 'nchar'].includes(normalizedType)) {
-    //   return Type.getType(UnicodeCharacterType);
-    // }
-
     const map = {
       int: 'integer',
       bit: 'boolean',
@@ -252,28 +233,9 @@ export class OraclePlatform extends AbstractSqlPlatform {
     return super.getDefaultMappedType(map[normalizedType] ?? type);
   }
 
-  // override getDefaultSchemaName(): string | undefined {
-  //   return 'dbo';
-  // }
-
   override getUuidTypeDeclarationSQL(column: { length?: number }): string {
     return 'raw(16)';
   }
-
-  // override validateMetadata(meta: EntityMetadata): void {
-  //   for (const prop of meta.props) {
-  //     if (
-  //       (prop.runtimeType === 'string' || ['string', 'nvarchar'].includes(prop.type))
-  //       && !['uuid'].includes(prop.type)
-  //       && !prop.columnTypes[0].startsWith('varchar')
-  //     ) {
-  //       prop.customType ??= new UnicodeStringType();
-  //       prop.customType.prop = prop;
-  //       prop.customType.platform = this;
-  //       prop.customType.meta = meta;
-  //     }
-  //   }
-  // }
 
   override usesCascadeStatement(): boolean {
     return true;
@@ -297,15 +259,6 @@ export class OraclePlatform extends AbstractSqlPlatform {
     return cast(`json_value(${root}, '$.${b.map(quoteKey).join('.')}')`);
   }
 
-  // override normalizePrimaryKey<T extends number | string = number | string>(data: Primary<T> | IPrimaryKey | string): T {
-  //   /* v8 ignore next 3 */
-  //   if (data instanceof UnicodeString) {
-  //     return data.value as T;
-  //   }
-  //
-  //   return data as T;
-  // }
-
   override usesEnumCheckConstraints(): boolean {
     return true;
   }
@@ -315,7 +268,7 @@ export class OraclePlatform extends AbstractSqlPlatform {
   }
 
   override supportsMultipleStatements(): boolean {
-    return false; // fixme we'll need to separate some queries dor FKs likely (maybe just FKs from drop tables)
+    return false;
   }
 
   override quoteIdentifier(id: string): string {
@@ -345,23 +298,6 @@ export class OraclePlatform extends AbstractSqlPlatform {
 
     return super.escape(value);
   }
-
-  // FIXME
-  // override escape(value: any): string {
-  //   if (value instanceof UnicodeString) {
-  //     return `N${SqlString.escape(value.value)}`;
-  //   }
-  //
-  //   if (value instanceof Buffer) {
-  //     return `0x${value.toString('hex')}`;
-  //   }
-  //
-  //   if (value instanceof Date) {
-  //     return SqlString.dateToString(value.toISOString(), this.timezone ?? 'local');
-  //   }
-  //
-  //   return SqlString.escape(value);
-  // }
 
   /* v8 ignore next 3: kept for type inference only */
   override getSchemaGenerator(driver: IDatabaseDriver, em?: EntityManager): OracleSchemaGenerator {
@@ -403,6 +339,20 @@ export class OraclePlatform extends AbstractSqlPlatform {
     };
 
     return map[type as never] ?? oracledb.DB_TYPE_VARCHAR;
+  }
+
+  createOutBindings(map: Dictionary<string>): Dictionary {
+    const outBindings = {} as Dictionary;
+    Object.defineProperty(outBindings, '__outBindings', { value: true, writable: true, configurable: true, enumerable: false });
+
+    for (const key of Object.keys(map)) {
+      outBindings[key] = {
+        dir: oracledb.BIND_OUT,
+        type: this.mapToOracleType(map[key]),
+      };
+    }
+
+    return outBindings;
   }
 
 }

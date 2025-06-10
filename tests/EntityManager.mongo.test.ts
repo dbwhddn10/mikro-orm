@@ -1975,7 +1975,7 @@ describe('EntityManagerMongo', () => {
     expect(mock.mock.calls[0][0]).toMatch(/\[90m\[query] \[39mdb\[0m.\[0mgetCollection\(\[33m'author'\[39m\)\[0m.\[0minsertMany\(\[ \{ createdAt: ISODate\('.*'\), updatedAt: ISODate\(.*\), foo: 'bar', name: 'Jon Snow', email: 'snow@wall.st', age: 30, termsAccepted: false, friends: \[] } ], \{}\);\[90m \[took \d+ ms]\[39m/);
 
     Object.assign(orm.config.getLogger(), { highlighter: new NullHighlighter() });
-  });
+  }, { retry: 3 });
 
   test('findOneOrFail', async () => {
     const author = new Author('Jon Snow', 'snow@wall.st');

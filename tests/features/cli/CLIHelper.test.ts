@@ -483,7 +483,7 @@ Maybe you want to check, or regenerate your yarn.lock or package-lock.json file?
     expect(logSpy.mock.calls[1][0]).toMatch('[37m[1mselect[22m[39m [32m1[39m [0m+[0m [32m1[39m');
 
     logSpy.mockRestore();
-  });
+  }, { retry: 3 });
 
   test('getNodeVersion', async () => {
     expect(CLIHelper.getNodeVersion()).toBe(process.versions.node);

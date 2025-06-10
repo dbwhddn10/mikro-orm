@@ -1,9 +1,15 @@
 const bool = (v?: string) => v && ['true', 't', '1'].includes(v.toLowerCase());
-const boolIfDefined = (v?: string) => v != null ? bool(v) : true;
-const enabled = () => !bool(process.env.NO_COLOR)
-  && !bool(process.env.MIKRO_ORM_NO_COLOR)
-  && boolIfDefined(process.env.FORCE_COLOR)
-  && boolIfDefined(process.env.MIKRO_ORM_COLORS);
+const enabled = () => {
+  const keys = ['FORCE_COLOR', 'NO_COLOR', 'MIKRO_ORM_COLORS', 'MIKRO_ORM_NO_COLOR'];
+
+  for (const key of keys) {
+    if (process.env[key] != null) {
+      return bool(process.env[key]);
+    }
+  }
+
+  return false;
+};
 const wrap = (fn: (text: string) => string) => (text: string) => enabled() ? fn(text) : text;
 
 /** @internal */

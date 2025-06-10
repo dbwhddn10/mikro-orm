@@ -1416,8 +1416,8 @@ describe('QueryBuilder', () => {
     expect(qb2.getParams()).toEqual(['test 123', 'e', '2359', true]);
 
     const qb3 = orm.em.createQueryBuilder<any>(BookTag2);
-    qb3.insert({ books: 123 }).withSchema('test123');
-    expect(qb3.getQuery()).toEqual('insert into `test123`.`book_tag2` (`books`) values (?)');
+    qb3.insert({ name: 123 }).withSchema('test123');
+    expect(qb3.getQuery()).toEqual('insert into `test123`.`book_tag2` (`name`) values (?)');
     expect(qb3.getParams()).toEqual([123]);
   });
 

@@ -1,20 +1,18 @@
+import { performance } from 'node:perf_hooks';
 import { v4 } from 'uuid';
 import {
   AnyEntity,
   ChangeSet,
+  ChangeSetType,
+  Collection,
+  Configuration,
   DefaultLogger,
+  EntityManager,
   EntityMetadata,
   EventSubscriber,
   FilterQuery,
   FlushEventArgs,
   ForeignKeyConstraintViolationException,
-  RawQueryFragment,
-} from '@mikro-orm/core';
-import {
-  ChangeSetType,
-  Collection,
-  Configuration,
-  EntityManager,
   InvalidFieldNameException,
   IsolationLevel,
   LoadStrategy,
@@ -26,9 +24,10 @@ import {
   QueryFlag,
   QueryOrder,
   raw,
+  RawQueryFragment,
   ref,
-  sql,
   Reference,
+  sql,
   SyntaxErrorException,
   TableExistsException,
   TableNotFoundException,
@@ -36,7 +35,7 @@ import {
   ValidationError,
   wrap,
 } from '@mikro-orm/core';
-import { OracleConnection, OracleDriver } from '@mikro-orm/oracledb';
+import { OracleDriver } from '@mikro-orm/oracledb';
 import {
   Address2,
   Author2,
@@ -51,7 +50,6 @@ import {
   Test2,
 } from './entities-sql/index.js';
 import { BASE_DIR, mockLogger } from './bootstrap.js';
-import { performance } from 'node:perf_hooks';
 import { Test2Subscriber } from './subscribers/Test2Subscriber.js';
 
 describe('EntityManagerOracle', () => {
@@ -117,95 +115,88 @@ describe('EntityManagerOracle', () => {
     });
   });
 
-  test.skip('getConnectionOptions()', async () => {
+  test('getConnectionOptions()', async () => {
     const config = new Configuration({
       driver: OracleDriver,
-      clientUrl: 'postgre://root@127.0.0.1:1234/db_name',
+      clientUrl: 'localhost:91521/service_name',
       host: '127.0.0.10',
       password: 'secret',
       user: 'user',
-      logger: vi.fn(),
-      forceUtcTimezone: true,
+      pool: { min: 1, max: 2, idleTimeoutMillis: 1000 },
     } as any, false);
     const driver = new OracleDriver(config);
     expect(driver.getConnection().mapOptions({})).toMatchObject({
-      database: 'db_name',
-      host: '127.0.0.10',
+      connectionString: 'localhost:91521/service_name',
       password: 'secret',
-      port: 1234,
-      user: 'user',
+      user: '"user"',
+      poolMin: 1,
+      poolMax: 2,
+      poolTimeout: 1000,
     });
   });
 
   test('raw query with array param', async () => {
-    const q1 = orm.em.getPlatform().formatQuery(`select * from author2 where id in (?) fetch next ? rows`, [[1, 2, 3], 3]);
-    expect(q1).toBe('select * from author2 where id in (1, 2, 3) fetch next 3 rows');
-    const q2 = orm.em.getPlatform().formatQuery(`select * from author2 where id in (?) fetch next ? rows`, [['1', '2', '3'], 3]);
-    expect(q2).toBe(`select * from author2 where id in ('1', '2', '3') fetch next 3 rows`);
+    const q1 = orm.em.getPlatform().formatQuery(`select * from "author2" where "id" in (?) fetch next ? rows`, [[1, 2, 3], 3]);
+    expect(q1).toBe('select * from "author2" where "id" in (1, 2, 3) fetch next 3 rows');
+    const q2 = orm.em.getPlatform().formatQuery(`select * from "author2" where "id" in (?) fetch next ? rows`, [['1', '2', '3'], 3]);
+    expect(q2).toBe(`select * from "author2" where "id" in ('1', '2', '3') fetch next 3 rows`);
   });
 
-  test.skip('should return postgre driver', async () => {
-    const driver = orm.em.getDriver();
-    expect(driver).toBeInstanceOf(OracleDriver);
-    await driver.findOne<Book2>(Book2.name, { double: 123 });
-    await expect(driver.findOne<Book2>(Book2.name, { double: 123 })).resolves.toBeNull();
-    const author = await driver.nativeInsert(Author2.name, { name: 'author', email: 'email' });
-    const tag = await driver.nativeInsert(BookTag2.name, { name: 'tag name' });
+  test('should return oracledb driver', async () => {
+    expect(orm.driver).toBeInstanceOf(OracleDriver);
+    await orm.driver.findOne<Book2>(Book2.name, { double: 123 });
+    await expect(orm.driver.findOne<Book2>(Book2.name, { double: 123 })).resolves.toBeNull();
+    const author = await orm.driver.nativeInsert(Author2, { name: 'author', email: 'email' });
+    const tag = await orm.driver.nativeInsert(BookTag2, { name: 'tag name' });
     const uuid1 = v4();
-    await expect(driver.nativeInsert(Book2.name, { uuid: uuid1, author: author.insertId, tags: [tag.insertId] })).resolves.not.toBeNull();
-    await expect(driver.nativeUpdate(Book2.name, { uuid: uuid1 }, { title: 'booook' })).resolves.not.toBeNull();
-    await expect(driver.getConnection().execute('select 1 as count')).resolves.toEqual([{ count: 1 }]);
-    await expect(driver.getConnection().execute('select 1 as count', [], 'get')).resolves.toEqual({ count: 1 });
-    await expect(driver.getConnection().execute('select 1 as count', [], 'run')).resolves.toEqual({
+    await expect(orm.driver.nativeInsert(Book2, { uuid: uuid1, author: author.insertId, tags: [tag.insertId] })).resolves.not.toBeNull();
+    await expect(orm.driver.nativeUpdate(Book2, { uuid: uuid1 }, { title: 'booook' }, { convertCustomTypes: true })).resolves.not.toBeNull();
+    await expect(orm.driver.getConnection().execute('select 1 as count')).resolves.toEqual([{ count: 1 }]);
+    await expect(orm.driver.getConnection().execute('select 1 as count', [], 'get')).resolves.toEqual({ count: 1 });
+    await expect(orm.driver.getConnection().execute('select 1 as count', [], 'run')).resolves.toEqual({
       affectedRows: 1,
       row: { count: 1 },
       rows: [{ count: 1 }],
     });
-    await expect(driver.getConnection().execute('insert into test2 (name) values (?) returning id', ['test'], 'run')).resolves.toEqual({
+    await expect(orm.driver.getConnection().execute('insert into "test2" ("name") values (?) returning "id" into :id', ['test', orm.driver.getPlatform().createOutBindings({ id: 'number' })], 'run')).resolves.toEqual({
       affectedRows: 1,
       row: { id: 1 },
       rows: [{ id: 1 }],
     });
-    await expect(driver.getConnection().execute('update test2 set name = ? where name = ?', ['test 2', 'test'], 'run')).resolves.toEqual({
+    await expect(orm.driver.getConnection().execute('update "test2" set "name" = ? where "name" = ?', ['test 2', 'test'], 'run')).resolves.toEqual({
       affectedRows: 1,
       row: undefined,
       rows: [],
     });
-    await expect(driver.getConnection().execute('delete from test2 where name = ?', ['test 2'], 'run')).resolves.toEqual({
+    await expect(orm.driver.getConnection().execute('delete from "test2" where "name" = ?', ['test 2'], 'run')).resolves.toEqual({
       affectedRows: 1,
       row: undefined,
       rows: [],
     });
-    expect(driver.getPlatform().denormalizePrimaryKey(1)).toBe(1);
-    expect(driver.getPlatform().denormalizePrimaryKey('1')).toBe('1');
-    await expect(driver.find<BookTag2>(BookTag2.name, { books: { $in: [uuid1] } })).resolves.not.toBeNull();
-    expect(driver.getPlatform().formatQuery('CREATE USER ?? WITH PASSWORD ?', ['foo', 'bar'])).toBe(`CREATE USER "foo" WITH PASSWORD 'bar'`);
-    expect(driver.getPlatform().formatQuery('select \\?, ?, ?', ['foo', 'bar'])).toBe(`select ?, 'foo', 'bar'`);
-    expect(driver.getPlatform().formatQuery('? = ??', ['foo', 'bar'])).toBe(`'foo' = "bar"`);
+    expect(orm.driver.getPlatform().denormalizePrimaryKey(1)).toBe(1);
+    expect(orm.driver.getPlatform().denormalizePrimaryKey('1')).toBe('1');
+    await expect(orm.driver.find(BookTag2, { books: { $in: [uuid1] } })).resolves.not.toBeNull();
 
     // multi inserts
-    await driver.nativeInsert(Test2.name, { id: 1, name: 't1' });
-    await driver.nativeInsert(Test2.name, { id: 2, name: 't2' });
-    await driver.nativeInsert(Test2.name, { id: 3, name: 't3' });
-    await driver.nativeInsert(Test2.name, { id: 4, name: 't4' });
-    await driver.nativeInsert(Test2.name, { id: 5, name: 't5' });
+    await orm.driver.nativeInsert(Test2, { id: 1, name: 't1' });
+    await orm.driver.nativeInsert(Test2, { id: 2, name: 't2' });
+    await orm.driver.nativeInsert(Test2, { id: 3, name: 't3' });
+    await orm.driver.nativeInsert(Test2, { id: 4, name: 't4' });
+    await orm.driver.nativeInsert(Test2, { id: 5, name: 't5' });
 
     const mock = mockLogger(orm, ['query']);
 
-    const res = await driver.nativeInsertMany(Publisher2.name, [
+    const res = await orm.driver.nativeInsertMany(Publisher2, [
       { name: 'test 1', tests: [1, 3, 4], type: PublisherType.GLOBAL, type2: PublisherType2.LOCAL },
       { name: 'test 2', tests: [4, 2], type: PublisherType.LOCAL, type2: PublisherType2.LOCAL },
       { name: 'test 3', tests: [1, 5, 2], type: PublisherType.GLOBAL, type2: PublisherType2.LOCAL },
     ]);
 
-    expect(mock.mock.calls[0][0]).toMatch('/* foo */ insert into "publisher2" ("name", "type", "type2") values (?, ?, ?), (?, ?, ?), (?, ?, ?) returning "id"');
-    expect(mock.mock.calls[1][0]).toMatch('/* foo */ insert into "publisher2_tests" ("test2_id", "publisher2_id") values (?, ?), (?, ?), (?, ?)');
-    expect(mock.mock.calls[2][0]).toMatch('/* foo */ insert into "publisher2_tests" ("test2_id", "publisher2_id") values (?, ?), (?, ?)');
-    expect(mock.mock.calls[3][0]).toMatch('/* foo */ insert into "publisher2_tests" ("test2_id", "publisher2_id") values (?, ?), (?, ?), (?, ?)');
+    expect(mock.mock.calls[0][0]).toMatch(`begin execute immediate 'insert into "publisher2" ("name", "type", "type2") values (?, ?, ?) returning "id" into :out_id' using out :id__0; execute immediate 'insert into "publisher2" ("name", "type", "type2") values (?, ?, ?) returning "id" into :out_id' using out :id__1; execute immediate 'insert into "publisher2" ("name", "type", "type2") values (?, ?, ?) returning "id" into :out_id' using out :id__2; end;`);
+    expect(mock.mock.calls[1][0]).toMatch(`begin execute immediate 'insert into "publisher2_tests" ("test2_id", "publisher2_id") values (?, ?) returning "id" into :out_id' using out :id__0; execute immediate 'insert into "publisher2_tests" ("test2_id", "publisher2_id") values (?, ?) returning "id" into :out_id' using out :id__1; execute immediate 'insert into "publisher2_tests" ("test2_id", "publisher2_id") values (?, ?) returning "id" into :out_id' using out :id__2; execute immediate 'insert into "publisher2_tests" ("test2_id", "publisher2_id") values (?, ?) returning "id" into :out_id' using out :id__3; execute immediate 'insert into "publisher2_tests" ("test2_id", "publisher2_id") values (?, ?) returning "id" into :out_id' using out :id__4; execute immediate 'insert into "publisher2_tests" ("test2_id", "publisher2_id") values (?, ?) returning "id" into :out_id' using out :id__5; execute immediate 'insert into "publisher2_tests" ("test2_id", "publisher2_id") values (?, ?) returning "id" into :out_id' using out :id__6; execute immediate 'insert into "publisher2_tests" ("test2_id", "publisher2_id") values (?, ?) returning "id" into :out_id' using out :id__7; end;`);
 
-    // postgres returns all the ids based on returning clause
     expect(res).toMatchObject({ insertId: 1, affectedRows: 3, row: { id: 1 }, rows: [ { id: 1 }, { id: 2 }, { id: 3 } ] });
-    const res2 = await driver.find(Publisher2.name, {});
+    const res2 = await orm.driver.find(Publisher2, {});
     expect(res2).toMatchObject([
       { id: 1, name: 'test 1', type: PublisherType.GLOBAL, type2: PublisherType2.LOCAL },
       { id: 2, name: 'test 2', type: PublisherType.LOCAL, type2: PublisherType2.LOCAL },
@@ -226,19 +217,6 @@ describe('EntityManagerOracle', () => {
     await expect(driver.nativeInsert('not_existing', { foo: 'bar' })).rejects.toThrow(err1);
     const err2 = 'ORA-00942: table or view "mikro_orm_test"."not_existing" does not exist';
     await expect(driver.nativeDelete('not_existing', {})).rejects.toThrow(err2);
-  });
-
-  test.skip('connection returns correct URL', async () => {
-    const conn1 = new OracleConnection(new Configuration({
-      driver: OracleDriver,
-      clientUrl: 'postgre://example.host.com',
-      port: 1234,
-      user: 'usr',
-      password: 'pw',
-    }, false));
-    expect(conn1.getClientUrl()).toBe('postgre://usr:*****@example.host.com:1234');
-    const conn2 = new OracleConnection(new Configuration({ driver: OracleDriver, port: 5433 } as any, false));
-    expect(conn2.getClientUrl()).toBe('postgresql://postgres@127.0.0.1:5433');
   });
 
   test('should convert entity to PK when trying to search by entity', async () => {
@@ -1940,7 +1918,7 @@ describe('EntityManagerOracle', () => {
     await orm.em.flush();
 
     expect(mock.mock.calls[0][0]).toMatch('begin');
-    expect(mock.mock.calls[1][0]).toMatch(/update "author2" set "age" = case when \("id" = 1\) then "age" \* 2 when \("id" = 2\) then "age" \/ 2 else "age" end, "updated_at" = case when \("id" = 1\) then timestamp '.*' when \("id" = 2\) then timestamp '.*' else "updated_at" end where "id" in \(1, 2\) returning "age", "id" into :age, :id/);
+    expect(mock.mock.calls[1][0]).toMatch(/update "author2" set "age" = case when \("id" = 1\) then "age" \* 2 when \("id" = 2\) then "age" \/ 2 else "age" end, "updated_at" = case when \("id" = 1\) then timestamp '.*' when \("id" = 2\) then timestamp '.*' else "updated_at" end where "id" in \(1, 2\) returning "age", "id" into :out_age, :out_id/);
     expect(mock.mock.calls[2][0]).toMatch('commit');
 
     expect(ref1.age).toBe(246);
@@ -2245,7 +2223,7 @@ describe('EntityManagerOracle', () => {
   });
 
   test('should allow to find by array of PKs', async () => {
-    await orm.em.getDriver().nativeInsertMany(Author2.name, [
+    await orm.em.getDriver().nativeInsertMany(Author2, [
       { id: 1, name: 'n1', email: 'e1' },
       { id: 2, name: 'n2', email: 'e2' },
       { id: 3, name: 'n3', email: 'e3' },
@@ -2257,11 +2235,11 @@ describe('EntityManagerOracle', () => {
 
   test('exceptions', async () => {
     const driver = orm.em.getDriver();
-    await driver.nativeInsert(Author2.name, { name: 'author', email: 'email' });
+    await driver.nativeInsert(Author2, { name: 'author', email: 'email' });
     await expect(orm.em.upsert(Author2, { name: 'author', email: 'email', favouriteAuthor: 123 })).rejects.toThrow(ForeignKeyConstraintViolationException);
     await expect(orm.em.upsertMany(Author2, [{ name: 'author', email: 'email', favouriteAuthor: 123 }])).rejects.toThrow(ForeignKeyConstraintViolationException);
-    await expect(driver.nativeInsert(Author2.name, { name: 'author', email: 'email' })).rejects.toThrow(UniqueConstraintViolationException);
-    await expect(driver.nativeInsert(Author2.name, {})).rejects.toThrow(NotNullConstraintViolationException);
+    await expect(driver.nativeInsert(Author2, { name: 'author', email: 'email' })).rejects.toThrow(UniqueConstraintViolationException);
+    await expect(driver.nativeInsert(Author2, {})).rejects.toThrow(NotNullConstraintViolationException);
     await expect(driver.nativeInsert('not_existing', { foo: 'bar' })).rejects.toThrow(TableNotFoundException);
     await expect(driver.execute('create table author2 (foo clob not null)')).rejects.toThrow(TableExistsException);
     await expect(driver.execute('foo bar 123')).rejects.toThrow(SyntaxErrorException);
@@ -2348,36 +2326,6 @@ describe('EntityManagerOracle', () => {
     const updates = Subscriber.log.reduce((x, y) => x.concat(y), []).filter(c => c.type === ChangeSetType.UPDATE);
     expect(updates).toHaveLength(0);
     Subscriber.log.length = 0;
-  });
-
-  test('getConnection() with replicas (GH issue #1963)', async () => {
-    const config = new Configuration({
-      driver: OracleDriver,
-      clientUrl: 'postgre://root@127.0.0.1:1234/db_name',
-      host: '127.0.0.10',
-      password: 'secret',
-      user: 'user',
-      logger: vi.fn(),
-      forceUtcTimezone: true,
-      replicas: [
-        { name: 'read-1', host: 'read_host_1', user: 'read_user' },
-      ],
-    } as any, false);
-    const driver = new OracleDriver(config);
-    expect(driver.getConnection('write').getConnectionOptions()).toMatchObject({
-      database: 'db_name',
-      host: '127.0.0.10',
-      password: 'secret',
-      user: 'user',
-      port: 1234,
-    });
-    expect(driver.getConnection('read').getConnectionOptions()).toMatchObject({
-      database: 'db_name',
-      host: 'read_host_1',
-      password: 'secret',
-      user: 'read_user',
-      port: 1234,
-    });
   });
 
   // this should run in ~200ms (when running single test locally)
@@ -2702,8 +2650,7 @@ describe('EntityManagerOracle', () => {
     await orm.em.flush();
     expect(mock).toHaveBeenCalledTimes(4);
     expect(mock.mock.calls[1][0]).toMatch('select "f0"."id" from "foo_bar2" "f0" where (("f0"."id" = ? and "f0"."version" = ?) or ("f0"."id" = ? and "f0"."version" = ?))');
-    // TODO we might need the `out_` prefix for the into params too?
-    expect(mock.mock.calls[2][0]).toMatch('update "foo_bar2" set "id" = case when ("id" = ?) then ? when ("id" = ?) then ? else "id" end, "version" = current_timestamp where "id" in (?, ?) returning "id", "version" into :id, :version');
+    expect(mock.mock.calls[2][0]).toMatch('update "foo_bar2" set "id" = case when ("id" = ?) then ? when ("id" = ?) then ? else "id" end, "version" = current_timestamp where "id" in (?, ?) returning "id", "version" into :out_id, :out_version');
 
     const c1 = await orm.em.fork().findOne(FooBar2, bars[0]);
     expect(c1).toBeDefined();

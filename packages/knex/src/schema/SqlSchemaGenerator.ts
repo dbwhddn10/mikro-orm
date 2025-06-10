@@ -414,14 +414,12 @@ export class SqlSchemaGenerator extends AbstractSchemaGenerator<AbstractSqlDrive
     if (this.platform.supportsMultipleStatements()) {
       for (const group of groups) {
         const query = group.join('\n');
-        // console.log(query);
         await this.driver.execute(query);
       }
 
       return;
     }
 
-    // console.log(groups);
     await Utils.runSerial(groups.flat(), line => this.driver.execute(line));
   }
 

@@ -2,18 +2,15 @@ import { v4 } from 'uuid';
 import {
   AnyEntity,
   ChangeSet,
+  ChangeSetType,
+  Collection,
+  Configuration,
   DefaultLogger,
+  EntityManager,
   EntityMetadata,
   EventSubscriber,
   FilterQuery,
   FlushEventArgs,
-  RawQueryFragment,
-} from '@mikro-orm/core';
-import {
-  ChangeSetType,
-  Collection,
-  Configuration,
-  EntityManager,
   ForeignKeyConstraintViolationException,
   InvalidFieldNameException,
   IsolationLevel,
@@ -26,9 +23,10 @@ import {
   QueryFlag,
   QueryOrder,
   raw,
+  RawQueryFragment,
   ref,
-  sql,
   Reference,
+  sql,
   SyntaxErrorException,
   TableExistsException,
   TableNotFoundException,
@@ -134,66 +132,63 @@ describe('EntityManagerPostgre', () => {
   });
 
   test('should return postgre driver', async () => {
-    const driver = orm.em.getDriver();
-    expect(driver).toBeInstanceOf(PostgreSqlDriver);
-    await expect(driver.findOne<Book2>(Book2.name, { double: 123 })).resolves.toBeNull();
-    const author = await driver.nativeInsert(Author2.name, { name: 'author', email: 'email' });
-    const tag = await driver.nativeInsert(BookTag2.name, { name: 'tag name' });
+    expect(orm.driver).toBeInstanceOf(PostgreSqlDriver);
+    await expect(orm.driver.findOne(Book2, { double: 123 })).resolves.toBeNull();
+    const author = await orm.driver.nativeInsert(Author2, { name: 'author', email: 'email' });
+    const tag = await orm.driver.nativeInsert(BookTag2, { name: 'tag name' });
     const uuid1 = v4();
-    await expect(driver.nativeInsert(Book2.name, { uuid: uuid1, author: author.insertId, tags: [tag.insertId] })).resolves.not.toBeNull();
-    await expect(driver.nativeUpdate(Book2.name, { uuid: uuid1 }, { title: 'booook' })).resolves.not.toBeNull();
-    await expect(driver.getConnection().execute('select 1 as count')).resolves.toEqual([{ count: 1 }]);
-    await expect(driver.getConnection().execute('select 1 as count', [], 'get')).resolves.toEqual({ count: 1 });
-    await expect(driver.getConnection().execute('select 1 as count', [], 'run')).resolves.toEqual({
+    await expect(orm.driver.nativeInsert(Book2, { uuid: uuid1, author: author.insertId, tags: [tag.insertId] })).resolves.not.toBeNull();
+    await expect(orm.driver.nativeUpdate(Book2, { uuid: uuid1 }, { title: 'booook' })).resolves.not.toBeNull();
+    await expect(orm.driver.getConnection().execute('select 1 as count')).resolves.toEqual([{ count: 1 }]);
+    await expect(orm.driver.getConnection().execute('select 1 as count', [], 'get')).resolves.toEqual({ count: 1 });
+    await expect(orm.driver.getConnection().execute('select 1 as count', [], 'run')).resolves.toEqual({
       affectedRows: 1,
       row: { count: 1 },
       rows: [{ count: 1 }],
     });
-    await expect(driver.getConnection().execute('insert into test2 (name) values (?) returning id', ['test'], 'run')).resolves.toEqual({
+    await expect(orm.driver.getConnection().execute('insert into test2 (name) values (?) returning id', ['test'], 'run')).resolves.toEqual({
       affectedRows: 1,
       row: { id: 1 },
       rows: [{ id: 1 }],
     });
-    await expect(driver.getConnection().execute('update test2 set name = ? where name = ?', ['test 2', 'test'], 'run')).resolves.toEqual({
+    await expect(orm.driver.getConnection().execute('update test2 set name = ? where name = ?', ['test 2', 'test'], 'run')).resolves.toEqual({
       affectedRows: 1,
       row: undefined,
       rows: [],
     });
-    await expect(driver.getConnection().execute('delete from test2 where name = ?', ['test 2'], 'run')).resolves.toEqual({
+    await expect(orm.driver.getConnection().execute('delete from test2 where name = ?', ['test 2'], 'run')).resolves.toEqual({
       affectedRows: 1,
       row: undefined,
       rows: [],
     });
-    expect(driver.getPlatform().denormalizePrimaryKey(1)).toBe(1);
-    expect(driver.getPlatform().denormalizePrimaryKey('1')).toBe('1');
-    await expect(driver.find<BookTag2>(BookTag2.name, { books: { $in: [uuid1] } })).resolves.not.toBeNull();
-    expect(driver.getPlatform().formatQuery('CREATE USER ?? WITH PASSWORD ?', ['foo', 'bar'])).toBe(`CREATE USER "foo" WITH PASSWORD 'bar'`);
-    expect(driver.getPlatform().formatQuery('select \\?, ?, ?', ['foo', 'bar'])).toBe(`select ?, 'foo', 'bar'`);
-    expect(driver.getPlatform().formatQuery('? = ??', ['foo', 'bar'])).toBe(`'foo' = "bar"`);
+    expect(orm.driver.getPlatform().denormalizePrimaryKey(1)).toBe(1);
+    expect(orm.driver.getPlatform().denormalizePrimaryKey('1')).toBe('1');
+    await expect(orm.driver.find<BookTag2>(BookTag2, { books: { $in: [uuid1] } })).resolves.not.toBeNull();
+    expect(orm.driver.getPlatform().formatQuery('CREATE USER ?? WITH PASSWORD ?', ['foo', 'bar'])).toBe(`CREATE USER "foo" WITH PASSWORD 'bar'`);
+    expect(orm.driver.getPlatform().formatQuery('select \\?, ?, ?', ['foo', 'bar'])).toBe(`select ?, 'foo', 'bar'`);
+    expect(orm.driver.getPlatform().formatQuery('? = ??', ['foo', 'bar'])).toBe(`'foo' = "bar"`);
 
     // multi inserts
-    await driver.nativeInsert(Test2.name, { id: 1, name: 't1' });
-    await driver.nativeInsert(Test2.name, { id: 2, name: 't2' });
-    await driver.nativeInsert(Test2.name, { id: 3, name: 't3' });
-    await driver.nativeInsert(Test2.name, { id: 4, name: 't4' });
-    await driver.nativeInsert(Test2.name, { id: 5, name: 't5' });
+    await orm.driver.nativeInsert(Test2, { id: 1, name: 't1' });
+    await orm.driver.nativeInsert(Test2, { id: 2, name: 't2' });
+    await orm.driver.nativeInsert(Test2, { id: 3, name: 't3' });
+    await orm.driver.nativeInsert(Test2, { id: 4, name: 't4' });
+    await orm.driver.nativeInsert(Test2, { id: 5, name: 't5' });
 
     const mock = mockLogger(orm, ['query']);
 
-    const res = await driver.nativeInsertMany(Publisher2.name, [
+    const res = await orm.driver.nativeInsertMany(Publisher2, [
       { name: 'test 1', tests: [1, 3, 4], type: PublisherType.GLOBAL, type2: PublisherType2.LOCAL },
       { name: 'test 2', tests: [4, 2], type: PublisherType.LOCAL, type2: PublisherType2.LOCAL },
       { name: 'test 3', tests: [1, 5, 2], type: PublisherType.GLOBAL, type2: PublisherType2.LOCAL },
     ]);
 
     expect(mock.mock.calls[0][0]).toMatch('/* foo */ insert into "publisher2" ("name", "type", "type2") values (?, ?, ?), (?, ?, ?), (?, ?, ?) returning "id"');
-    expect(mock.mock.calls[1][0]).toMatch('/* foo */ insert into "publisher2_tests" ("test2_id", "publisher2_id") values (?, ?), (?, ?), (?, ?)');
-    expect(mock.mock.calls[2][0]).toMatch('/* foo */ insert into "publisher2_tests" ("test2_id", "publisher2_id") values (?, ?), (?, ?)');
-    expect(mock.mock.calls[3][0]).toMatch('/* foo */ insert into "publisher2_tests" ("test2_id", "publisher2_id") values (?, ?), (?, ?), (?, ?)');
+    expect(mock.mock.calls[1][0]).toMatch('/* foo */ insert into "publisher2_tests" ("test2_id", "publisher2_id") values (?, ?), (?, ?), (?, ?), (?, ?), (?, ?), (?, ?), (?, ?), (?, ?)');
 
     // postgres returns all the ids based on returning clause
     expect(res).toMatchObject({ insertId: 1, affectedRows: 3, row: { id: 1 }, rows: [ { id: 1 }, { id: 2 }, { id: 3 } ] });
-    const res2 = await driver.find(Publisher2.name, {});
+    const res2 = await orm.driver.find(Publisher2, {});
     expect(res2).toMatchObject([
       { id: 1, name: 'test 1', type: PublisherType.GLOBAL, type2: PublisherType2.LOCAL },
       { id: 2, name: 'test 2', type: PublisherType.LOCAL, type2: PublisherType2.LOCAL },

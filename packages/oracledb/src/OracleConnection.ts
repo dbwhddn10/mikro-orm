@@ -64,14 +64,18 @@ export class OracleConnection extends AbstractSqlConnection {
     ret.user = user.startsWith('"') || user === 'system' ? user : this.platform.quoteIdentifier(user);
     ret.connectionString = this.config.getClientUrl();
     Reflect.deleteProperty(ret, 'database');
+    Reflect.deleteProperty(ret, 'port');
+    Reflect.deleteProperty(ret, 'host');
 
     return Utils.mergeConfig(ret, overrides);
   }
 
+  override getClientUrl(): string {
+    return this.options.clientUrl ?? this.platform.getDefaultClientUrl();
+  }
+
   override async execute<T extends QueryResult | EntityData<AnyEntity> | EntityData<AnyEntity>[] = EntityData<AnyEntity>[]>(query: string | NativeQueryBuilder | RawQueryFragment, params: readonly unknown[] = [], method: 'all' | 'get' | 'run' = 'all', ctx?: Transaction, loggerContext?: LoggingOptions): Promise<T> {
     await this.ensureConnection();
-
-    // console.log('execute', query, params, new Error().stack);
 
     if (query instanceof NativeQueryBuilder) {
       query = query.toRaw();
@@ -93,7 +97,6 @@ export class OracleConnection extends AbstractSqlConnection {
       rawQuery = last.__rawQuery;
       delete last.__outBindings;
       delete last.__rawQuery;
-      (params as unknown[]).pop(); // FIXME maybe a bit too hackish?
     } else {
       last = undefined;
     }
@@ -154,10 +157,6 @@ export class OracleConnection extends AbstractSqlConnection {
       return res.rows;
     }
 
-    const rowCount = res.rows.length;
-    const hasEmptyCount = (rowCount === 1) && ('' in res.rows[0]);
-    const emptyRow = hasEmptyCount && Number(res.rows[0]['']);
-
     if (res.numAffectedRows > 0n && res.outBinds) {
       const keys = Object.keys(res.outBinds);
       const rows: Dictionary[] = [];
@@ -185,9 +184,12 @@ export class OracleConnection extends AbstractSqlConnection {
       res.rows = rows;
     }
 
+    const rowCount = res.rows.length;
+    const hasEmptyCount = (rowCount === 1) && ('' in res.rows[0]);
+    const emptyRow = hasEmptyCount && Number(res.rows[0]['']);
     const affectedRows = hasEmptyCount
       ? emptyRow
-      : (res.numAffectedRows == null ? 0 : Number(res.numAffectedRows));
+      : (res.numAffectedRows == null ? rowCount : Number(res.numAffectedRows ?? rowCount));
 
     return {
       affectedRows,

@@ -1,11 +1,19 @@
 const bool = (v?: string) => v && ['true', 't', '1'].includes(v.toLowerCase());
 const enabled = () => {
-  const keys = ['FORCE_COLOR', 'NO_COLOR', 'MIKRO_ORM_COLORS', 'MIKRO_ORM_NO_COLOR'];
+  if (process.env.FORCE_COLOR != null) {
+    return bool(process.env.FORCE_COLOR);
+  }
 
-  for (const key of keys) {
-    if (process.env[key] != null) {
-      return bool(process.env[key]);
-    }
+  if (process.env.MIKRO_ORM_NO_COLOR != null) {
+    return !bool(process.env.MIKRO_ORM_NO_COLOR);
+  }
+
+  if (process.env.NO_COLOR != null) {
+    return !bool(process.env.NO_COLOR);
+  }
+
+  if (process.env.MIKRO_ORM_COLORS != null) {
+    return bool(process.env.MIKRO_ORM_COLORS);
   }
 
   return false;

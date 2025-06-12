@@ -2364,7 +2364,9 @@ describe('EntityManagerMySql', () => {
     Object.assign(orm.config.getLogger(), { highlighter: new SqlHighlighter() });
 
     const author = new Author2('Jon Snow', 'snow@wall.st');
+    process.env.FORCE_COLOR = '1';
     await orm.em.persistAndFlush(author);
+    delete process.env.FORCE_COLOR;
 
     expect(mock.mock.calls.length).toBe(3);
     expect(mock.mock.calls[0][0]).toMatch('begin');
@@ -2378,7 +2380,9 @@ describe('EntityManagerMySql', () => {
     const mock = mockLogger(orm, ['query']);
 
     const author = new Author2('Jon Snow', 'snow@wall.st');
+    process.env.FORCE_COLOR = '1';
     await orm.em.persistAndFlush(author);
+    delete process.env.FORCE_COLOR;
 
     expect(mock.mock.calls.length).toBe(3);
     expect(mock.mock.calls[0][0]).toMatch("\x1B[90m[query] \x1B[39mbegin\x1B[36m (via write connection '127.0.0.1')\x1B[39m");
